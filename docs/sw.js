@@ -1,4 +1,4 @@
-const CACHE = 'catan-v1';
+const CACHE = 'catan-v2';
 const FILES = [
   './',
   './index.html',
