@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1c2632"/>
+  <g transform="translate(256 256)">
+    <polygon points="0,-160 139,-80 139,80 0,160 -139,80 -139,-80" fill="#a05030" stroke="#fff" stroke-width="8"/>
+    <polygon points="-30,-30 30,-30 30,30 0,55 -30,30" fill="#fff"/>
+    <text x="0" y="105" font-family="Helvetica, Arial, sans-serif" font-size="60" font-weight="900"
+          text-anchor="middle" fill="#fff">CATAN</text>
+  </g>
+</svg>

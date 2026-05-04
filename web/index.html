@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Catan">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1c2632">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<title>Catan</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+  html, body { margin: 0; padding: 0; overscroll-behavior: none; touch-action: manipulation; }
+  body {
+    background: #1c2632;
+    color: #eef0f4;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    height: 100vh; height: 100dvh;
+    display: flex; flex-direction: column;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    overflow: hidden;
+  }
+  #status-bar {
+    background: #243243; padding: 6px 8px;
+    display: flex; align-items: center; gap: 8px; flex: 0 0 auto;
+    border-bottom: 1px solid #1a2230;
+  }
+  #player-tag { font-weight: 800; padding: 4px 10px; border-radius: 6px; background:#000; font-size: 13px; }
+  #phase-msg { flex: 1; font-size: 13px; line-height: 1.2; }
+  #dice { font-weight: bold; font-size: 16px; padding: 2px 8px; background:#000; border-radius:4px; min-width: 30px; text-align: center; }
+  .icon-btn {
+    background: #4a5870; color: #fff; border: 1px solid #5a6890;
+    border-radius: 6px; padding: 4px 10px; font-size: 14px; font-weight: bold;
+  }
+
+  #board-wrap {
+    flex: 1 1 auto; min-height: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #2d6a9c;
+    position: relative;
+  }
+  canvas#board { display: block; touch-action: none; }
+
+  #players-bar {
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+    gap: 3px; padding: 4px; background: #1a2230; flex: 0 0 auto;
+  }
+  .player-card {
+    padding: 4px 6px; border-radius: 6px; background: #2a3545;
+    border: 2px solid transparent; min-width: 0;
+    font-size: 11px; line-height: 1.2; cursor: pointer;
+  }
+  .player-card.current { background: #38465c; }
+  .player-card.steal-target { background: #6b4020; border-color: #ffd070; }
+  .player-card .name-row { display:flex; align-items:center; justify-content:space-between; }
+  .player-card .name { font-weight: 700; font-size: 13px; }
+  .player-card .vp { font-weight: 800; font-size: 14px; }
+  .player-card .stats { color: #aab; font-size: 10px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .player-card .badges { font-size: 10px; color: #ffd070; }
+
+  #hand-bar {
+    background: #243243; padding: 4px 6px; flex: 0 0 auto;
+    display: flex; gap: 4px; overflow-x: auto; min-height: 60px; align-items: center;
+  }
+  #hand-bar::-webkit-scrollbar { height: 0; }
+  .res-card {
+    flex: 0 0 auto; width: 42px; height: 50px; border-radius: 6px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #111; font-weight: bold; font-size: 9px; border: 1px solid #000;
+    cursor: pointer;
+  }
+  .res-card .cnt { font-size: 18px; line-height: 1; }
+  .dev-card {
+    flex: 0 0 auto; width: 60px; height: 50px; border-radius: 6px;
+    background: #d4d8f0; color: #111; padding: 4px 4px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    border: 1px solid #000; font-size: 9px; cursor: pointer;
+  }
+  .dev-card.disabled { opacity: 0.45; cursor: default; }
+  .dev-card .label { font-weight: bold; line-height: 1.1; }
+  .dev-card .cnt { align-self: flex-end; font-size: 12px; font-weight: bold; }
+  .hand-empty { color: #889; font-size: 12px; padding: 0 8px; }
+
+  #actions-bar {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; padding: 4px;
+    background: #1a2230; flex: 0 0 auto;
+  }
+  .action-btn {
+    padding: 10px 4px; background: #4a5870; color: #fff;
+    border: 1px solid #5a6890; border-radius: 8px;
+    font-size: 12px; font-weight: 700; cursor: pointer; min-height: 44px;
+    line-height: 1.1;
+  }
+  .action-btn.primary { background: #2a8050; border-color: #3aa070; }
+  .action-btn.cancel  { background: #803030; border-color: #b04040; }
+  .action-btn.wide    { grid-column: 1 / -1; }
+  .action-btn:disabled { background: #2a3040; color: #667; border-color: #2a3040; }
+  .cost { display: block; font-size: 9px; opacity: 0.7; margin-top: 2px; }
+
+  /* modals */
+  #modal-root { position: fixed; inset: 0; z-index: 50; }
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center; padding: 12px;
+  }
+  .modal {
+    background: #243243; border-radius: 14px; padding: 16px;
+    max-width: 420px; width: 100%; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  }
+  .modal h2 { margin: 0 0 10px 0; font-size: 18px; }
+  .modal p { margin: 0 0 12px 0; font-size: 14px; color: #ccd; }
+  .modal-row { display:flex; gap:6px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+  .modal-actions { display:flex; gap:8px; justify-content: flex-end; margin-top: 12px; }
+  .modal-btn {
+    padding: 10px 14px; background: #4a5870; color:#fff;
+    border:1px solid #5a6890; border-radius:8px; cursor:pointer; font-size:14px; font-weight:700;
+  }
+  .modal-btn.primary { background:#2a8050; border-color:#3aa070; }
+  .modal-btn.danger  { background:#803030; border-color:#b04040; }
+  .modal-btn:disabled { background:#2a3040; color:#667; border-color:#2a3040; }
+
+  .pick {
+    width: 60px; height: 70px; border: 2px solid #000;
+    border-radius: 8px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    color:#111; font-weight:bold; font-size: 11px; cursor:pointer;
+    text-align: center;
+  }
+  .pick .sub { font-size: 10px; opacity: 0.7; }
+  .pick.selected { box-shadow: 0 0 0 3px #ffd070; }
+
+  /* pass-the-phone cover */
+  .pass-cover {
+    position: fixed; inset: 0; background: #000; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+  }
+  .pass-cover .who { font-size: 28px; font-weight: 800; }
+  .pass-cover .tap { font-size: 14px; color: #aab; }
+
+  .center { text-align: center; }
+  .small { font-size: 11px; color: #aab; }
+</style>
+</head>
+<body>
+  <div id="status-bar">
+    <span id="player-tag">Red</span>
+    <span id="phase-msg">Loading…</span>
+    <span id="dice"></span>
+    <button id="menu-btn" class="icon-btn" type="button">⋮</button>
+  </div>
+  <div id="board-wrap"><canvas id="board"></canvas></div>
+  <div id="players-bar"></div>
+  <div id="hand-bar"></div>
+  <div id="actions-bar"></div>
+  <div id="modal-root"></div>
+
+<script>
+'use strict';
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const RESOURCES = ['wood', 'brick', 'sheep', 'wheat', 'ore'];
+const TERRAIN_RESOURCE = { forest:'wood', hills:'brick', pasture:'sheep', fields:'wheat', mountains:'ore', desert:null };
+const TERRAIN_COLORS = {
+  forest:    '#226b22',
+  hills:     '#a55a2e',
+  pasture:   '#8acf52',
+  fields:    '#f0c844',
+  mountains: '#7c7c7c',
+  desert:    '#e6d29a',
+};
+const RESOURCE_COLORS = {
+  wood:'#226b22', brick:'#a55a2e', sheep:'#8acf52', wheat:'#f0c844', ore:'#7c7c7c'
+};
+const RESOURCE_LABEL = { wood:'Wd', brick:'Br', sheep:'Sh', wheat:'Wh', ore:'Or' };
+const TERRAIN_COUNTS = { forest:4, pasture:4, fields:4, hills:3, mountains:3, desert:1 };
+const NUMBER_TOKENS = [2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12];
+const NUMBER_PIPS = {2:1,3:2,4:3,5:4,6:5,8:5,9:4,10:3,11:2,12:1};
+
+const HEX_COORDS = [
+  [0,-2],[1,-2],[2,-2],
+  [-1,-1],[0,-1],[1,-1],[2,-1],
+  [-2,0],[-1,0],[0,0],[1,0],[2,0],
+  [-2,1],[-1,1],[0,1],[1,1],
+  [-2,2],[-1,2],[0,2],
+];
+const HEX_COORD_SET = new Set(HEX_COORDS.map(c => c.join(',')));
+
+const PLAYER_COLORS = ['#dc3838', '#3a6cd0', '#f0f0f5', '#ee8a30'];
+const PLAYER_NAMES  = ['Red', 'Blue', 'White', 'Orange'];
+
+const BUILD_COSTS = {
+  road:       { wood:1, brick:1 },
+  settlement: { wood:1, brick:1, wheat:1, sheep:1 },
+  city:       { ore:3, wheat:2 },
+  dev_card:   { ore:1, wheat:1, sheep:1 },
+};
+const COST_LABEL = {
+  road: '1Wd 1Br',
+  settlement: '1Wd 1Br 1Sh 1Wh',
+  city: '3Or 2Wh',
+  dev_card: '1Or 1Wh 1Sh',
+};
+
+const DEV_CARD_COUNTS = { knight:14, vp:5, road_building:2, year_of_plenty:2, monopoly:2 };
+const DEV_CARD_NAMES = {
+  knight: 'Knight', vp: 'Victory Pt',
+  road_building: 'Road Bldg', year_of_plenty: 'Yr of Plenty', monopoly: 'Monopoly',
+};
+const MAX_BUILDINGS = { settlement:5, city:4, road:15 };
+const WIN_VP = 10;
+
+// pointy-top hex direction offsets, matching corner index 0 = top vertex,
+// edges go clockwise from top-right edge as direction 0
+const HEX_DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+
+const PORT_PLACEMENTS = [
+  [[0,-2],  2, '3:1'],
+  [[2,-2],  1, 'wheat'],
+  [[2,-1],  0, 'ore'],
+  [[2, 0],  0, '3:1'],
+  [[1, 1],  5, 'sheep'],
+  [[-1, 2], 5, '3:1'],
+  [[-2, 2], 4, 'brick'],
+  [[-2, 1], 3, 'wood'],
+  [[-2, 0], 3, '3:1'],
+];
+
+// Phase constants
+const Ph = {
+  SETUP_SETTLEMENT: 'setup_settlement',
+  SETUP_ROAD: 'setup_road',
+  ROLL: 'roll',
+  MAIN: 'main',
+  DISCARD: 'discard',
+  MOVE_ROBBER: 'move_robber',
+  STEAL: 'steal',
+  PLACE_ROAD: 'place_road',
+  PLACE_SETTLEMENT: 'place_settlement',
+  PLACE_CITY: 'place_city',
+  ROAD_BUILDING: 'road_building',
+  YEAR_OF_PLENTY: 'year_of_plenty',
+  MONOPOLY: 'monopoly',
+  GAME_OVER: 'game_over',
+};
+
+// ============================================================
+// HEX GEOMETRY (board geometry recomputed when canvas resizes)
+// ============================================================
+const SQRT3 = Math.sqrt(3);
+let HEX_SIZE = 36;
+let BOARD_CX = 200;
+let BOARD_CY = 200;
+
+function hexToPixel(q, r) {
+  return [BOARD_CX + HEX_SIZE * (SQRT3 * q + SQRT3/2 * r),
+          BOARD_CY + HEX_SIZE * (3/2 * r)];
+}
+function hexCorners(cx, cy) {
+  const pts = [];
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 180) * (60 * i - 90);
+    pts.push([cx + HEX_SIZE * Math.cos(a), cy + HEX_SIZE * Math.sin(a)]);
+  }
+  return pts;
+}
+function vKey(x, y) {
+  // Round to 1px relative to hex size to merge shared corners
+  const r = Math.max(1, Math.round(HEX_SIZE / 30));
+  return Math.round(x / r) * r + ',' + Math.round(y / r) * r;
+}
+function eKey(v1, v2) { return v1 < v2 ? v1 + '|' + v2 : v2 + '|' + v1; }
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ============================================================
+// BOARD
+// ============================================================
+class Board {
+  constructor() {
+    this.hexes = new Map();
+    this.vertices = new Map();
+    this.edges = new Map();
+    this.robber = null;
+    this._build();
+  }
+  _build() {
+    const pool = [];
+    for (const [t, n] of Object.entries(TERRAIN_COUNTS)) for (let i=0;i<n;i++) pool.push(t);
+    shuffle(pool);
+    const tokens = NUMBER_TOKENS.slice(); shuffle(tokens);
+    for (const [q, r] of HEX_COORDS) {
+      const terrain = pool.pop();
+      const number = terrain === 'desert' ? null : tokens.pop();
+      const [cx, cy] = hexToPixel(q, r);
+      const corners = hexCorners(cx, cy);
+      const vkeys = corners.map(c => vKey(c[0], c[1]));
+      const key = q + ',' + r;
+      const hex = { coord: [q, r], key, terrain, number, cx, cy, corners, vkeys };
+      this.hexes.set(key, hex);
+      if (terrain === 'desert') this.robber = key;
+      for (let i = 0; i < 6; i++) {
+        const vk = vkeys[i];
+        if (!this.vertices.has(vk)) {
+          this.vertices.set(vk, {
+            key: vk, pos: corners[i],
+            adjHexes: new Set(), neighbors: new Set(),
+            building: null, owner: null, port: null,
+          });
+        }
+        this.vertices.get(vk).adjHexes.add(key);
+      }
+      for (let i = 0; i < 6; i++) {
+        const v1 = vkeys[i], v2 = vkeys[(i+1) % 6];
+        const ek = eKey(v1, v2);
+        if (!this.edges.has(ek)) {
+          const mid = [(corners[i][0] + corners[(i+1)%6][0]) / 2,
+                       (corners[i][1] + corners[(i+1)%6][1]) / 2];
+          this.edges.set(ek, { key: ek, v1, v2, pos: mid, adjHexes: new Set(), road: null });
+        }
+        this.edges.get(ek).adjHexes.add(key);
+      }
+    }
+    for (const e of this.edges.values()) {
+      this.vertices.get(e.v1).neighbors.add(e.v2);
+      this.vertices.get(e.v2).neighbors.add(e.v1);
+    }
+    this._addPorts();
+  }
+  _addPorts() {
+    for (const [coord, dirIdx, kind] of PORT_PLACEMENTS) {
+      const h = this.hexes.get(coord[0] + ',' + coord[1]);
+      if (!h) continue;
+      const v1 = h.vkeys[dirIdx];
+      const v2 = h.vkeys[(dirIdx + 1) % 6];
+      this.vertices.get(v1).port = kind;
+      this.vertices.get(v2).port = kind;
+    }
+  }
+  // Recompute pixel positions when hex geometry changes (e.g. after resize)
+  recomputeGeometry() {
+    // We rebuild positions but keep ownership/buildings/roads.
+    const oldVByKey = this.vertices;
+    const oldEByKey = this.edges;
+    const newHexes = new Map();
+    const newVertices = new Map();
+    const newEdges = new Map();
+    const oldHexList = Array.from(this.hexes.values());
+    for (const h of oldHexList) {
+      const [q, r] = h.coord;
+      const [cx, cy] = hexToPixel(q, r);
+      const corners = hexCorners(cx, cy);
+      const vkeys = corners.map(c => vKey(c[0], c[1]));
+      const newH = { coord:[q,r], key:h.key, terrain:h.terrain, number:h.number, cx, cy, corners, vkeys };
+      newHexes.set(h.key, newH);
+      // map old vkey at same corner index to new vkey
+      for (let i = 0; i < 6; i++) {
+        const oldVk = h.vkeys[i];
+        const newVk = vkeys[i];
+        if (!newVertices.has(newVk)) {
+          const oldV = oldVByKey.get(oldVk);
+          newVertices.set(newVk, {
+            key: newVk, pos: corners[i],
+            adjHexes: new Set(), neighbors: new Set(),
+            building: oldV ? oldV.building : null,
+            owner: oldV ? oldV.owner : null,
+            port: oldV ? oldV.port : null,
+            _oldKey: oldVk,
+          });
+        }
+        newVertices.get(newVk).adjHexes.add(h.key);
+      }
+      for (let i = 0; i < 6; i++) {
+        const v1 = vkeys[i], v2 = vkeys[(i+1) % 6];
+        const ek = eKey(v1, v2);
+        if (!newEdges.has(ek)) {
+          const mid = [(corners[i][0] + corners[(i+1)%6][0]) / 2,
+                       (corners[i][1] + corners[(i+1)%6][1]) / 2];
+          // map to old edge by old vkeys
+          const oldVk1 = h.vkeys[i], oldVk2 = h.vkeys[(i+1)%6];
+          const oldE = oldEByKey.get(eKey(oldVk1, oldVk2));
+          newEdges.set(ek, {
+            key: ek, v1, v2, pos: mid, adjHexes: new Set(),
+            road: oldE ? oldE.road : null,
+            _oldKey: oldE ? oldE.key : null,
+          });
+        }
+        newEdges.get(ek).adjHexes.add(h.key);
+      }
+    }
+    for (const e of newEdges.values()) {
+      newVertices.get(e.v1).neighbors.add(e.v2);
+      newVertices.get(e.v2).neighbors.add(e.v1);
+    }
+    // Build oldKey -> newKey maps so player vertex/edge sets can be updated
+    const vkMap = new Map(); // oldVk -> newVk
+    for (const v of newVertices.values()) if (v._oldKey) vkMap.set(v._oldKey, v.key);
+    const ekMap = new Map();
+    for (const e of newEdges.values()) if (e._oldKey) ekMap.set(e._oldKey, e.key);
+
+    this.hexes = newHexes;
+    this.vertices = newVertices;
+    this.edges = newEdges;
+    return { vkMap, ekMap };
+  }
+  hexAt(coord) { return this.hexes.get(coord); }
+}
+
+// ============================================================
+// PLAYER
+// ============================================================
+class Player {
+  constructor(idx, name, color) {
+    this.idx = idx;
+    this.name = name;
+    this.color = color;
+    this.resources = { wood:0, brick:0, sheep:0, wheat:0, ore:0 };
+    this.dev_cards = { knight:0, vp:0, road_building:0, year_of_plenty:0, monopoly:0 };
+    this.dev_cards_new = { knight:0, vp:0, road_building:0, year_of_plenty:0, monopoly:0 };
+    this.played_knights = 0;
+    this.has_largest_army = false;
+    this.has_longest_road = false;
+    this.longest_road_length = 0;
+    this.settlements = new Set();
+    this.cities = new Set();
+    this.roads = new Set();
+    this.played_dev_this_turn = false;
+  }
+  totalResources() { return RESOURCES.reduce((s, r) => s + this.resources[r], 0); }
+  totalDevCards() {
+    let s = 0;
+    for (const c in this.dev_cards) s += this.dev_cards[c] + this.dev_cards_new[c];
+    return s;
+  }
+  canAfford(cost) { for (const r in cost) if (this.resources[r] < cost[r]) return false; return true; }
+  pay(cost) { for (const r in cost) this.resources[r] -= cost[r]; }
+  gain(r, n=1) { this.resources[r] += n; }
+  victoryPoints() {
+    let vp = this.settlements.size + 2*this.cities.size + this.dev_cards.vp + this.dev_cards_new.vp;
+    if (this.has_largest_army) vp += 2;
+    if (this.has_longest_road) vp += 2;
+    return vp;
+  }
+  publicVictoryPoints() {
+    let vp = this.settlements.size + 2*this.cities.size;
+    if (this.has_largest_army) vp += 2;
+    if (this.has_longest_road) vp += 2;
+    return vp;
+  }
+  remapKeys(vkMap, ekMap) {
+    const remap = (set, map) => {
+      const out = new Set();
+      for (const k of set) out.add(map.get(k) || k);
+      return out;
+    };
+    this.settlements = remap(this.settlements, vkMap);
+    this.cities = remap(this.cities, vkMap);
+    this.roads = remap(this.roads, ekMap);
+  }
+}
+
+// ============================================================
+// GAME
+// ============================================================
+class Game {
+  constructor(numPlayers = 3) {
+    this.numPlayers = Math.max(3, Math.min(4, numPlayers));
+    this.board = new Board();
+    this.players = [];
+    for (let i = 0; i < this.numPlayers; i++) {
+      this.players.push(new Player(i, PLAYER_NAMES[i], PLAYER_COLORS[i]));
+    }
+    this.current = 0;
+    this.phase = Ph.SETUP_SETTLEMENT;
+    this.dev_deck = this._makeDevDeck();
+    this.dice = [0, 0];
+    this.has_rolled = false;
+    this.setup_round = 1;
+    this.setup_last_settlement = null;
+    this.discard_needed = new Map();
+    this.steal_targets = [];
+    this.road_building_left = 0;
+    this.yop_picks_left = 0;
+    this.largest_army_holder = null;
+    this.longest_road_holder = null;
+    this.message = 'Setup: Red, place your first settlement.';
+    this.winner = null;
+    this.log = [];
+    this.passingTo = null; // for hand-off cover
+  }
+  _makeDevDeck() {
+    const deck = [];
+    for (const c in DEV_CARD_COUNTS) for (let i = 0; i < DEV_CARD_COUNTS[c]; i++) deck.push(c);
+    shuffle(deck);
+    return deck;
+  }
+  cur() { return this.players[this.current]; }
+  addLog(m) { this.log.push(m); if (this.log.length > 20) this.log.shift(); }
+
+  // ---- validity ----
+  canPlaceSettlement(vk, pidx, setup=false) {
+    const v = this.board.vertices.get(vk);
+    if (!v || v.building !== null) return false;
+    for (const nb of v.neighbors) if (this.board.vertices.get(nb).building !== null) return false;
+    if (setup) return true;
+    for (const nb of v.neighbors) {
+      const e = this.board.edges.get(eKey(vk, nb));
+      if (e && e.road === pidx) return true;
+    }
+    return false;
+  }
+  canPlaceRoad(ek, pidx, setupAfterVk=null) {
+    const e = this.board.edges.get(ek);
+    if (!e || e.road !== null) return false;
+    if (setupAfterVk !== null) return e.v1 === setupAfterVk || e.v2 === setupAfterVk;
+    for (const v of [e.v1, e.v2]) {
+      const vert = this.board.vertices.get(v);
+      if (vert.owner === pidx) return true;
+      if (vert.owner === null) {
+        for (const nb of vert.neighbors) {
+          if (nb === (v === e.v1 ? e.v2 : e.v1)) continue;
+          const oe = this.board.edges.get(eKey(v, nb));
+          if (oe && oe.road === pidx) return true;
+        }
+      }
+    }
+    return false;
+  }
+  canUpgradeCity(vk, pidx) {
+    const v = this.board.vertices.get(vk);
+    return v && v.building === 'settlement' && v.owner === pidx;
+  }
+  validSettlementSpots(pidx, setup=false) {
+    const out = [];
+    for (const vk of this.board.vertices.keys()) if (this.canPlaceSettlement(vk, pidx, setup)) out.push(vk);
+    return out;
+  }
+  validRoadSpots(pidx, setupAfterVk=null) {
+    const out = [];
+    for (const ek of this.board.edges.keys()) if (this.canPlaceRoad(ek, pidx, setupAfterVk)) out.push(ek);
+    return out;
+  }
+  validCitySpots(pidx) {
+    const out = [];
+    for (const vk of this.board.vertices.keys()) if (this.canUpgradeCity(vk, pidx)) out.push(vk);
+    return out;
+  }
+
+  // ---- setup ----
+  setupPlaceSettlement(vk) {
+    if (!this.canPlaceSettlement(vk, this.current, true)) return;
+    const v = this.board.vertices.get(vk);
+    v.building = 'settlement'; v.owner = this.current;
+    this.cur().settlements.add(vk);
+    this.setup_last_settlement = vk;
+    if (this.setup_round === 2) {
+      for (const hk of v.adjHexes) {
+        const h = this.board.hexes.get(hk);
+        if (h.terrain !== 'desert') this.cur().gain(TERRAIN_RESOURCE[h.terrain]);
+      }
+    }
+    this.phase = Ph.SETUP_ROAD;
+    this.message = `${this.cur().name}: place a road touching that settlement.`;
+  }
+  setupPlaceRoad(ek) {
+    if (!this.canPlaceRoad(ek, this.current, this.setup_last_settlement)) return;
+    this.board.edges.get(ek).road = this.current;
+    this.cur().roads.add(ek);
+    this.cur().longest_road_length = this._longestRoadFor(this.current);
+    this.setup_last_settlement = null;
+    const n = this.players.length;
+    if (this.setup_round === 1) {
+      if (this.current === n - 1) this.setup_round = 2;
+      else this.current++;
+      this.phase = Ph.SETUP_SETTLEMENT;
+      this.message = `Setup: ${this.cur().name}, place your settlement.`;
+    } else {
+      if (this.current === 0) {
+        this.phase = Ph.ROLL; this.has_rolled = false;
+        this.message = `${this.cur().name}: roll the dice.`;
+      } else {
+        this.current--;
+        this.phase = Ph.SETUP_SETTLEMENT;
+        this.message = `Setup (round 2): ${this.cur().name}, place your settlement.`;
+      }
+    }
+  }
+
+  // ---- dice / 7 ----
+  rollDice() {
+    if (this.phase !== Ph.ROLL) return;
+    const d1 = 1 + Math.floor(Math.random() * 6);
+    const d2 = 1 + Math.floor(Math.random() * 6);
+    this.dice = [d1, d2];
+    this.has_rolled = true;
+    const total = d1 + d2;
+    this.addLog(`${this.cur().name} rolled ${d1}+${d2}=${total}`);
+    if (total === 7) this._handleSeven();
+    else { this._distribute(total); this.phase = Ph.MAIN; this.message = `${this.cur().name}: build, trade, or end turn.`; }
+  }
+  _distribute(total) {
+    const gained = new Map();
+    for (const h of this.board.hexes.values()) {
+      if (h.number !== total) continue;
+      if (h.key === this.board.robber) continue;
+      const res = TERRAIN_RESOURCE[h.terrain]; if (!res) continue;
+      for (const vk of h.vkeys) {
+        const v = this.board.vertices.get(vk);
+        if (v.building === 'settlement') {
+          if (!gained.has(v.owner)) gained.set(v.owner, {});
+          gained.get(v.owner)[res] = (gained.get(v.owner)[res] || 0) + 1;
+        } else if (v.building === 'city') {
+          if (!gained.has(v.owner)) gained.set(v.owner, {});
+          gained.get(v.owner)[res] = (gained.get(v.owner)[res] || 0) + 2;
+        }
+      }
+    }
+    for (const [pidx, gains] of gained) {
+      for (const r in gains) this.players[pidx].gain(r, gains[r]);
+    }
+    if (gained.size) {
+      const parts = [];
+      for (const [pidx, gains] of gained) {
+        const gs = Object.entries(gains).map(([r,n]) => `+${n} ${r}`).join(', ');
+        parts.push(`${this.players[pidx].name}: ${gs}`);
+      }
+      this.addLog('  ' + parts.join(' | '));
+    }
+  }
+  _handleSeven() {
+    this.discard_needed = new Map();
+    for (const p of this.players) {
+      if (p.totalResources() > 7) this.discard_needed.set(p.idx, Math.floor(p.totalResources() / 2));
+    }
+    if (this.discard_needed.size) {
+      this.phase = Ph.DISCARD;
+      const first = this.discard_needed.keys().next().value;
+      this.message = `${this.players[first].name} must discard ${this.discard_needed.get(first)}.`;
+    } else {
+      this.phase = Ph.MOVE_ROBBER;
+      this.message = `${this.cur().name}: move the robber.`;
+    }
+  }
+  discardCard(pidx, res) {
+    if (this.phase !== Ph.DISCARD) return;
+    if (!this.discard_needed.has(pidx)) return;
+    const p = this.players[pidx];
+    if (p.resources[res] <= 0) return;
+    p.resources[res]--;
+    this.discard_needed.set(pidx, this.discard_needed.get(pidx) - 1);
+    if (this.discard_needed.get(pidx) <= 0) this.discard_needed.delete(pidx);
+    if (this.discard_needed.size === 0) {
+      this.phase = Ph.MOVE_ROBBER;
+      this.message = `${this.cur().name}: move the robber.`;
+    } else {
+      const next = this.discard_needed.keys().next().value;
+      this.message = `${this.players[next].name} must discard ${this.discard_needed.get(next)}.`;
+    }
+  }
+  moveRobber(coord) {
+    if (coord === this.board.robber || !this.board.hexes.has(coord)) return;
+    this.board.robber = coord;
+    const targets = new Set();
+    const h = this.board.hexes.get(coord);
+    for (const vk of h.vkeys) {
+      const v = this.board.vertices.get(vk);
+      if (v.owner !== null && v.owner !== this.current) {
+        if (this.players[v.owner].totalResources() > 0) targets.add(v.owner);
+      }
+    }
+    this.steal_targets = Array.from(targets).sort((a,b)=>a-b);
+    if (!this.steal_targets.length) this._postRobber();
+    else {
+      this.phase = Ph.STEAL;
+      const names = this.steal_targets.map(i => this.players[i].name).join(', ');
+      this.message = `${this.cur().name}: tap a player to steal (${names}).`;
+    }
+  }
+  stealFrom(target) {
+    if (this.phase !== Ph.STEAL) return;
+    if (!this.steal_targets.includes(target)) return;
+    const t = this.players[target];
+    const pool = [];
+    for (const r in t.resources) for (let i = 0; i < t.resources[r]; i++) pool.push(r);
+    if (pool.length) {
+      const r = pool[Math.floor(Math.random() * pool.length)];
+      t.resources[r]--; this.cur().gain(r);
+      this.addLog(`${this.cur().name} stole 1 ${r} from ${t.name}.`);
+    }
+    this._postRobber();
+  }
+  _postRobber() {
+    if (!this.has_rolled) { this.phase = Ph.ROLL; this.message = `${this.cur().name}: roll the dice.`; }
+    else { this.phase = Ph.MAIN; this.message = `${this.cur().name}: build, trade, or end turn.`; }
+  }
+
+  // ---- build ----
+  startBuildRoad() {
+    const p = this.cur();
+    if (p.roads.size >= MAX_BUILDINGS.road) return;
+    if (!p.canAfford(BUILD_COSTS.road)) return;
+    if (!this.validRoadSpots(p.idx).length) return;
+    this.phase = Ph.PLACE_ROAD;
+    this.message = `${p.name}: tap an edge to place a road.`;
+  }
+  placeRoad(ek) {
+    const p = this.cur();
+    if (!this.canPlaceRoad(ek, p.idx)) return;
+    if (!p.canAfford(BUILD_COSTS.road)) return;
+    p.pay(BUILD_COSTS.road);
+    this.board.edges.get(ek).road = p.idx;
+    p.roads.add(ek);
+    this._recomputeLongestRoad();
+    this.phase = Ph.MAIN; this.message = `${p.name}: build, trade, or end turn.`;
+    this._checkWin();
+  }
+  startBuildSettlement() {
+    const p = this.cur();
+    if (p.settlements.size >= MAX_BUILDINGS.settlement) return;
+    if (!p.canAfford(BUILD_COSTS.settlement)) return;
+    if (!this.validSettlementSpots(p.idx).length) return;
+    this.phase = Ph.PLACE_SETTLEMENT;
+    this.message = `${p.name}: tap a vertex to place a settlement.`;
+  }
+  placeSettlement(vk) {
+    const p = this.cur();
+    if (!this.canPlaceSettlement(vk, p.idx)) return;
+    if (!p.canAfford(BUILD_COSTS.settlement)) return;
+    p.pay(BUILD_COSTS.settlement);
+    const v = this.board.vertices.get(vk);
+    v.building = 'settlement'; v.owner = p.idx;
+    p.settlements.add(vk);
+    this._recomputeLongestRoad();
+    this.phase = Ph.MAIN; this.message = `${p.name}: build, trade, or end turn.`;
+    this._checkWin();
+  }
+  startBuildCity() {
+    const p = this.cur();
+    if (p.cities.size >= MAX_BUILDINGS.city) return;
+    if (!p.canAfford(BUILD_COSTS.city)) return;
+    if (!this.validCitySpots(p.idx).length) return;
+    this.phase = Ph.PLACE_CITY;
+    this.message = `${p.name}: tap one of your settlements to upgrade.`;
+  }
+  placeCity(vk) {
+    const p = this.cur();
+    if (!this.canUpgradeCity(vk, p.idx)) return;
+    if (!p.canAfford(BUILD_COSTS.city)) return;
+    p.pay(BUILD_COSTS.city);
+    const v = this.board.vertices.get(vk);
+    v.building = 'city';
+    p.settlements.delete(vk); p.cities.add(vk);
+    this.phase = Ph.MAIN; this.message = `${p.name}: build, trade, or end turn.`;
+    this._checkWin();
+  }
+  buyDevCard() {
+    if (this.phase !== Ph.MAIN) return;
+    const p = this.cur();
+    if (!this.dev_deck.length) return;
+    if (!p.canAfford(BUILD_COSTS.dev_card)) return;
+    p.pay(BUILD_COSTS.dev_card);
+    const c = this.dev_deck.pop();
+    p.dev_cards_new[c]++;
+    this.addLog(`${p.name} bought a dev card.`);
+    this._checkWin();
+  }
+
+  // ---- dev cards ----
+  playDevCard(kind) {
+    const p = this.cur();
+    if (this.phase !== Ph.MAIN) return;
+    if (p.played_dev_this_turn && kind !== 'vp') return;
+    if (p.dev_cards[kind] <= 0) return;
+    if (kind === 'knight') {
+      p.dev_cards.knight--; p.played_knights++; p.played_dev_this_turn = true;
+      this.addLog(`${p.name} played a Knight.`);
+      this._updateLargestArmy();
+      this.phase = Ph.MOVE_ROBBER;
+      this.message = `${p.name}: move the robber.`;
+    } else if (kind === 'road_building') {
+      p.dev_cards.road_building--; p.played_dev_this_turn = true;
+      this.road_building_left = 2;
+      this.phase = Ph.ROAD_BUILDING;
+      this.message = `${p.name}: place 2 free roads.`;
+      this.addLog(`${p.name} played Road Building.`);
+    } else if (kind === 'year_of_plenty') {
+      p.dev_cards.year_of_plenty--; p.played_dev_this_turn = true;
+      this.yop_picks_left = 2;
+      this.phase = Ph.YEAR_OF_PLENTY;
+      this.message = `${p.name}: pick 2 resources from the bank.`;
+      this.addLog(`${p.name} played Year of Plenty.`);
+    } else if (kind === 'monopoly') {
+      p.dev_cards.monopoly--; p.played_dev_this_turn = true;
+      this.phase = Ph.MONOPOLY;
+      this.message = `${p.name}: choose a resource to monopolize.`;
+      this.addLog(`${p.name} played Monopoly.`);
+    }
+    this._checkWin();
+  }
+  roadBuildingPlace(ek) {
+    const p = this.cur();
+    if (!this.canPlaceRoad(ek, p.idx)) return;
+    if (p.roads.size >= MAX_BUILDINGS.road) return;
+    this.board.edges.get(ek).road = p.idx;
+    p.roads.add(ek);
+    this.road_building_left--;
+    this._recomputeLongestRoad();
+    if (this.road_building_left <= 0 || p.roads.size >= MAX_BUILDINGS.road
+        || !this.validRoadSpots(p.idx).length) {
+      this.phase = Ph.MAIN; this.message = `${p.name}: build, trade, or end turn.`;
+    } else {
+      this.message = `${p.name}: place ${this.road_building_left} more free road.`;
+    }
+    this._checkWin();
+  }
+  yopPick(res) {
+    const p = this.cur();
+    p.gain(res); this.yop_picks_left--;
+    if (this.yop_picks_left <= 0) {
+      this.phase = Ph.MAIN; this.message = `${p.name}: build, trade, or end turn.`;
+    } else this.message = `${p.name}: pick ${this.yop_picks_left} more resource.`;
+  }
+  monopolyPick(res) {
+    const p = this.cur();
+    let total = 0;
+    for (const o of this.players) {
+      if (o.idx === p.idx) continue;
+      const n = o.resources[res]; o.resources[res] = 0; p.gain(res, n); total += n;
+    }
+    this.addLog(`${p.name} monopolized ${res} (+${total}).`);
+    this.phase = Ph.MAIN; this.message = `${p.name}: build, trade, or end turn.`;
+  }
+
+  // ---- trade ----
+  bestRatio(p, res) {
+    let r = 4;
+    for (const vk of [...p.settlements, ...p.cities]) {
+      const port = this.board.vertices.get(vk).port;
+      if (port === '3:1') r = Math.min(r, 3);
+      else if (port === res) r = Math.min(r, 2);
+    }
+    return r;
+  }
+  bankTrade(give, recv) {
+    if (this.phase !== Ph.MAIN || give === recv) return;
+    const p = this.cur();
+    const ratio = this.bestRatio(p, give);
+    if (p.resources[give] < ratio) return;
+    p.resources[give] -= ratio; p.gain(recv);
+    this.addLog(`${p.name} traded ${ratio} ${give} -> 1 ${recv} (bank).`);
+  }
+
+  // ---- end turn ----
+  endTurn() {
+    if (this.phase !== Ph.MAIN || !this.has_rolled) return;
+    const p = this.cur();
+    for (const c in p.dev_cards_new) { p.dev_cards[c] += p.dev_cards_new[c]; p.dev_cards_new[c] = 0; }
+    p.played_dev_this_turn = false;
+    this.current = (this.current + 1) % this.players.length;
+    this.has_rolled = false;
+    this.phase = Ph.ROLL;
+    this.message = `${this.cur().name}: roll the dice.`;
+    this.passingTo = this.current; // trigger pass-the-phone cover
+  }
+
+  // ---- bookkeeping ----
+  _updateLargestArmy() {
+    let best = 2;
+    let holder = this.largest_army_holder;
+    if (holder !== null) best = Math.max(best, this.players[holder].played_knights);
+    let nh = holder;
+    for (const p of this.players) {
+      if (p.played_knights >= 3 && p.played_knights > best) { best = p.played_knights; nh = p.idx; }
+    }
+    if (nh !== holder) {
+      if (holder !== null) this.players[holder].has_largest_army = false;
+      this.players[nh].has_largest_army = true;
+      this.largest_army_holder = nh;
+      this.addLog(`${this.players[nh].name} now holds Largest Army.`);
+    }
+  }
+  _recomputeLongestRoad() {
+    for (const p of this.players) p.longest_road_length = this._longestRoadFor(p.idx);
+    let holder = this.longest_road_holder;
+    let best = holder !== null ? this.players[holder].longest_road_length : 0;
+    let nh = holder;
+    for (const p of this.players) {
+      if (p.longest_road_length >= 5 && p.longest_road_length > best) { best = p.longest_road_length; nh = p.idx; }
+    }
+    if (holder !== null && this.players[holder].longest_road_length < 5) {
+      this.players[holder].has_longest_road = false; holder = null; nh = null; best = 0;
+      for (const p of this.players) {
+        if (p.longest_road_length >= 5 && p.longest_road_length > best) { best = p.longest_road_length; nh = p.idx; }
+      }
+    }
+    if (nh !== holder) {
+      if (holder !== null) this.players[holder].has_longest_road = false;
+      if (nh !== null) {
+        this.players[nh].has_longest_road = true;
+        this.addLog(`${this.players[nh].name} now holds Longest Road (${best}).`);
+      }
+      this.longest_road_holder = nh;
+    }
+  }
+  _longestRoadFor(pidx) {
+    const edges = [];
+    for (const ek of this.players[pidx].roads) edges.push(this.board.edges.get(ek));
+    if (!edges.length) return 0;
+    const adj = new Map();
+    for (const e of edges) {
+      if (!adj.has(e.v1)) adj.set(e.v1, []);
+      if (!adj.has(e.v2)) adj.set(e.v2, []);
+      adj.get(e.v1).push([e.v2, e.key]);
+      adj.get(e.v2).push([e.v1, e.key]);
+    }
+    let best = 0;
+    const dfs = (node, prev, used) => {
+      if (used.size > best) best = used.size;
+      const v = this.board.vertices.get(node);
+      if (prev !== null && v.owner !== null && v.owner !== pidx) return;
+      const nexts = adj.get(node) || [];
+      for (const [nb, ek] of nexts) {
+        if (used.has(ek)) continue;
+        used.add(ek); dfs(nb, node, used); used.delete(ek);
+      }
+    };
+    for (const v of adj.keys()) dfs(v, null, new Set());
+    return best;
+  }
+  _checkWin() {
+    for (const p of this.players) {
+      if (p.victoryPoints() >= WIN_VP) {
+        this.winner = p.idx; this.phase = Ph.GAME_OVER;
+        this.message = `${p.name} wins with ${p.victoryPoints()} VP!`;
+        return;
+      }
+    }
+  }
+}
+
+// ============================================================
+// UI
+// ============================================================
+let game = null;
+let canvas, ctx;
+let canvasDPR = 1;
+let canvasSizePx = 320;
+
+function init() {
+  canvas = document.getElementById('board');
+  ctx = canvas.getContext('2d');
+
+  document.getElementById('menu-btn').addEventListener('click', openMenu);
+
+  // events
+  canvas.addEventListener('pointerdown', onCanvasPointerDown, { passive: false });
+
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', onResize);
+
+  newGame(3);
+
+  // SW
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+}
+
+function newGame(numPlayers) {
+  game = new Game(numPlayers);
+  // First need to compute hex geometry to fit container size, then rebuild board
+  resizeCanvas();
+  // After resize, board geometry is set; rebuild Board to use these sizes.
+  game.board = new Board();
+  // Reset player buildings/roads since board is fresh
+  for (const p of game.players) { p.settlements.clear(); p.cities.clear(); p.roads.clear(); }
+  render();
+}
+
+function resizeCanvas() {
+  const wrap = document.getElementById('board-wrap');
+  const w = wrap.clientWidth - 4;
+  const h = wrap.clientHeight - 4;
+  const size = Math.max(220, Math.min(w, h));
+  canvasSizePx = size;
+  canvasDPR = window.devicePixelRatio || 1;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  canvas.width = Math.floor(size * canvasDPR);
+  canvas.height = Math.floor(size * canvasDPR);
+  ctx.setTransform(canvasDPR, 0, 0, canvasDPR, 0, 0);
+  // recompute hex sizing
+  HEX_SIZE = size / (SQRT3 * 5 + 1.6);
+  BOARD_CX = size / 2;
+  BOARD_CY = size / 2;
+  if (game) {
+    const { vkMap, ekMap } = game.board.recomputeGeometry();
+    for (const p of game.players) p.remapKeys(vkMap, ekMap);
+    if (game.setup_last_settlement && vkMap.has(game.setup_last_settlement)) {
+      game.setup_last_settlement = vkMap.get(game.setup_last_settlement);
+    }
+    if (game.board.robber && !game.board.hexes.has(game.board.robber)) {
+      // robber key didn't change; hex.key is q,r so it stays the same
+    }
+  }
+}
+
+function onResize() { resizeCanvas(); render(); }
+
+// ----- canvas hit-testing -----
+function pointerToCanvas(ev) {
+  const rect = canvas.getBoundingClientRect();
+  return [ev.clientX - rect.left, ev.clientY - rect.top];
+}
+function nearestVertex(pt, max) {
+  let best = null, bd = max * max;
+  for (const [vk, v] of game.board.vertices) {
+    const dx = pt[0] - v.pos[0], dy = pt[1] - v.pos[1];
+    const d = dx*dx + dy*dy;
+    if (d < bd) { bd = d; best = vk; }
+  }
+  return best;
+}
+function nearestEdge(pt, max) {
+  let best = null, bd = max * max;
+  for (const [ek, e] of game.board.edges) {
+    const dx = pt[0] - e.pos[0], dy = pt[1] - e.pos[1];
+    const d = dx*dx + dy*dy;
+    if (d < bd) { bd = d; best = ek; }
+  }
+  return best;
+}
+function hexAtPoint(pt) {
+  const r2 = (HEX_SIZE * 0.85) ** 2;
+  for (const [k, h] of game.board.hexes) {
+    const dx = pt[0] - h.cx, dy = pt[1] - h.cy;
+    if (dx*dx + dy*dy < r2) return k;
+  }
+  return null;
+}
+
+function onCanvasPointerDown(ev) {
+  ev.preventDefault();
+  if (game.passingTo !== null) return;
+  if (game.phase === Ph.GAME_OVER) return;
+  const pt = pointerToCanvas(ev);
+  const hit = HEX_SIZE * 0.45;
+  if (game.phase === Ph.SETUP_SETTLEMENT || game.phase === Ph.PLACE_SETTLEMENT) {
+    const vk = nearestVertex(pt, hit);
+    if (vk) {
+      if (game.phase === Ph.SETUP_SETTLEMENT) game.setupPlaceSettlement(vk);
+      else game.placeSettlement(vk);
+      render();
+    }
+  } else if (game.phase === Ph.SETUP_ROAD || game.phase === Ph.PLACE_ROAD || game.phase === Ph.ROAD_BUILDING) {
+    const ek = nearestEdge(pt, hit);
+    if (ek) {
+      if (game.phase === Ph.SETUP_ROAD) game.setupPlaceRoad(ek);
+      else if (game.phase === Ph.ROAD_BUILDING) game.roadBuildingPlace(ek);
+      else game.placeRoad(ek);
+      render();
+    }
+  } else if (game.phase === Ph.PLACE_CITY) {
+    const vk = nearestVertex(pt, hit);
+    if (vk) { game.placeCity(vk); render(); }
+  } else if (game.phase === Ph.MOVE_ROBBER) {
+    const hk = hexAtPoint(pt);
+    if (hk) { game.moveRobber(hk); render(); }
+  }
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+function render() {
+  drawBoard();
+  drawStatus();
+  drawPlayers();
+  drawHand();
+  drawActions();
+  drawModals();
+}
+
+function drawBoard() {
+  ctx.clearRect(0, 0, canvasSizePx, canvasSizePx);
+  // sea bg
+  ctx.fillStyle = '#2d6a9c';
+  ctx.fillRect(0, 0, canvasSizePx, canvasSizePx);
+
+  const g = game;
+
+  // hexes
+  for (const h of g.board.hexes.values()) {
+    drawHex(h);
+  }
+  // ports
+  drawPorts();
+  // roads
+  for (const e of g.board.edges.values()) {
+    if (e.road === null) continue;
+    const v1 = g.board.vertices.get(e.v1).pos;
+    const v2 = g.board.vertices.get(e.v2).pos;
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = Math.max(5, HEX_SIZE * 0.18);
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(v1[0], v1[1]); ctx.lineTo(v2[0], v2[1]); ctx.stroke();
+    ctx.strokeStyle = PLAYER_COLORS[e.road];
+    ctx.lineWidth = Math.max(3, HEX_SIZE * 0.13);
+    ctx.beginPath(); ctx.moveTo(v1[0], v1[1]); ctx.lineTo(v2[0], v2[1]); ctx.stroke();
+  }
+  // highlight
+  const hl = currentHighlights();
+  if (hl) {
+    const [kind, items] = hl;
+    ctx.strokeStyle = '#ffff64';
+    ctx.lineWidth = 3;
+    if (kind === 'vertex') {
+      for (const vk of items) {
+        const v = g.board.vertices.get(vk);
+        ctx.beginPath(); ctx.arc(v.pos[0], v.pos[1], HEX_SIZE * 0.22, 0, Math.PI * 2); ctx.stroke();
+      }
+    } else if (kind === 'edge') {
+      for (const ek of items) {
+        const e = g.board.edges.get(ek);
+        const v1 = g.board.vertices.get(e.v1).pos;
+        const v2 = g.board.vertices.get(e.v2).pos;
+        ctx.beginPath(); ctx.moveTo(v1[0], v1[1]); ctx.lineTo(v2[0], v2[1]); ctx.stroke();
+      }
+    } else if (kind === 'hex') {
+      ctx.lineWidth = 4;
+      for (const k of items) {
+        const h = g.board.hexes.get(k);
+        ctx.beginPath();
+        ctx.moveTo(h.corners[0][0], h.corners[0][1]);
+        for (let i=1;i<6;i++) ctx.lineTo(h.corners[i][0], h.corners[i][1]);
+        ctx.closePath(); ctx.stroke();
+      }
+    }
+  }
+  // buildings
+  for (const v of g.board.vertices.values()) {
+    if (!v.building) continue;
+    drawBuilding(v);
+  }
+}
+
+function drawHex(h) {
+  ctx.fillStyle = TERRAIN_COLORS[h.terrain];
+  ctx.beginPath();
+  ctx.moveTo(h.corners[0][0], h.corners[0][1]);
+  for (let i = 1; i < 6; i++) ctx.lineTo(h.corners[i][0], h.corners[i][1]);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1.5; ctx.stroke();
+  if (h.number !== null) {
+    ctx.fillStyle = '#f5ebc8';
+    ctx.beginPath(); ctx.arc(h.cx, h.cy, HEX_SIZE * 0.34, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#222'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = (h.number === 6 || h.number === 8) ? '#bf2222' : '#222';
+    ctx.font = `bold ${HEX_SIZE * 0.42}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(h.number), h.cx, h.cy - HEX_SIZE * 0.05);
+    const pips = NUMBER_PIPS[h.number];
+    const pipR = HEX_SIZE * 0.045;
+    const totalW = pips * pipR * 2 + (pips - 1) * pipR * 0.5;
+    let px = h.cx - totalW / 2 + pipR;
+    const py = h.cy + HEX_SIZE * 0.22;
+    for (let i = 0; i < pips; i++) {
+      ctx.beginPath(); ctx.arc(px, py, pipR, 0, Math.PI * 2); ctx.fill();
+      px += pipR * 2 + pipR * 0.5;
+    }
+  }
+  if (h.key === game.board.robber) {
+    ctx.fillStyle = '#000';
+    const rx = h.cx + HEX_SIZE * 0.28, ry = h.cy - HEX_SIZE * 0.28;
+    ctx.beginPath();
+    ctx.arc(rx, ry - HEX_SIZE * 0.18, HEX_SIZE * 0.12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(rx - HEX_SIZE * 0.12, ry - HEX_SIZE * 0.06, HEX_SIZE * 0.24, HEX_SIZE * 0.32);
+  }
+}
+
+function drawPorts() {
+  const seen = new Set();
+  for (const [coord, dirIdx, kind] of PORT_PLACEMENTS) {
+    const h = game.board.hexes.get(coord[0] + ',' + coord[1]);
+    if (!h) continue;
+    const v1 = h.vkeys[dirIdx];
+    const v2 = h.vkeys[(dirIdx + 1) % 6];
+    const pair = [v1, v2].sort().join('|');
+    if (seen.has(pair)) continue; seen.add(pair);
+    const p1 = game.board.vertices.get(v1).pos;
+    const p2 = game.board.vertices.get(v2).pos;
+    const mid = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+    let dx = mid[0] - BOARD_CX, dy = mid[1] - BOARD_CY;
+    const len = Math.hypot(dx, dy) || 1;
+    const ox = mid[0] + dx / len * (HEX_SIZE * 0.55);
+    const oy = mid[1] + dy / len * (HEX_SIZE * 0.55);
+    ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(p2[0], p2[1]); ctx.stroke();
+    ctx.fillStyle = kind === '3:1' ? '#fff5d0' : RESOURCE_COLORS[kind];
+    ctx.beginPath(); ctx.arc(ox, oy, HEX_SIZE * 0.26, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#111';
+    ctx.font = `bold ${HEX_SIZE * 0.18}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (kind === '3:1') ctx.fillText('3:1', ox, oy);
+    else {
+      ctx.fillText('2:1', ox, oy - HEX_SIZE * 0.08);
+      ctx.font = `bold ${HEX_SIZE * 0.16}px sans-serif`;
+      ctx.fillText(RESOURCE_LABEL[kind], ox, oy + HEX_SIZE * 0.1);
+    }
+  }
+}
+
+function drawBuilding(v) {
+  const x = v.pos[0], y = v.pos[1];
+  const c = PLAYER_COLORS[v.owner];
+  ctx.fillStyle = c; ctx.strokeStyle = '#111'; ctx.lineWidth = 1.5;
+  if (v.building === 'settlement') {
+    const s = HEX_SIZE * 0.22;
+    ctx.beginPath();
+    ctx.moveTo(x - s, y + s * 0.6);
+    ctx.lineTo(x + s, y + s * 0.6);
+    ctx.lineTo(x + s, y - s * 0.2);
+    ctx.lineTo(x, y - s);
+    ctx.lineTo(x - s, y - s * 0.2);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  } else {
+    const s = HEX_SIZE * 0.27;
+    ctx.beginPath();
+    ctx.moveTo(x - s, y + s * 0.6);
+    ctx.lineTo(x + s, y + s * 0.6);
+    ctx.lineTo(x + s, y - s * 0.2);
+    ctx.lineTo(x + s * 0.2, y - s * 0.2);
+    ctx.lineTo(x + s * 0.2, y - s * 0.7);
+    ctx.lineTo(x - s * 0.4, y - s * 0.7);
+    ctx.lineTo(x - s, y - s * 0.2);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+}
+
+function currentHighlights() {
+  const g = game; const p = g.cur();
+  if (g.phase === Ph.SETUP_SETTLEMENT) return ['vertex', g.validSettlementSpots(p.idx, true)];
+  if (g.phase === Ph.SETUP_ROAD) return ['edge', g.validRoadSpots(p.idx, g.setup_last_settlement)];
+  if (g.phase === Ph.PLACE_SETTLEMENT) return ['vertex', g.validSettlementSpots(p.idx)];
+  if (g.phase === Ph.PLACE_ROAD || g.phase === Ph.ROAD_BUILDING) return ['edge', g.validRoadSpots(p.idx)];
+  if (g.phase === Ph.PLACE_CITY) return ['vertex', g.validCitySpots(p.idx)];
+  if (g.phase === Ph.MOVE_ROBBER) {
+    return ['hex', Array.from(g.board.hexes.keys()).filter(k => k !== g.board.robber)];
+  }
+  return null;
+}
+
+// ----- DOM panels -----
+
+function drawStatus() {
+  const g = game;
+  const p = g.cur();
+  const tag = document.getElementById('player-tag');
+  tag.textContent = p.name;
+  tag.style.background = p.color;
+  tag.style.color = (p.color === '#f0f0f5') ? '#111' : '#fff';
+  document.getElementById('phase-msg').textContent = g.message;
+  const dice = document.getElementById('dice');
+  if (g.has_rolled && g.dice[0]) {
+    dice.textContent = `${g.dice[0]}+${g.dice[1]}=${g.dice[0]+g.dice[1]}`;
+    dice.style.display = 'inline-block';
+  } else {
+    dice.style.display = 'none';
+  }
+}
+
+function drawPlayers() {
+  const bar = document.getElementById('players-bar');
+  bar.innerHTML = '';
+  for (const p of game.players) {
+    const card = document.createElement('div');
+    card.className = 'player-card';
+    if (p.idx === game.current) card.classList.add('current');
+    if (game.phase === Ph.STEAL && game.steal_targets.includes(p.idx)) card.classList.add('steal-target');
+    card.style.borderColor = p.color;
+    const badges = [];
+    if (p.has_largest_army) badges.push('★LA');
+    if (p.has_longest_road) badges.push('★LR');
+    card.innerHTML = `
+      <div class="name-row">
+        <span class="name" style="color:${p.color}">${p.name}</span>
+        <span class="vp">${p.idx === game.current ? p.victoryPoints() : p.publicVictoryPoints()}</span>
+      </div>
+      <div class="stats">C:${p.totalResources()} D:${p.totalDevCards()} K:${p.played_knights} LR:${p.longest_road_length}</div>
+      <div class="badges">${badges.join(' ')}</div>
+    `;
+    card.addEventListener('click', () => onPlayerCardClick(p.idx));
+    bar.appendChild(card);
+  }
+}
+
+function onPlayerCardClick(idx) {
+  if (game.phase === Ph.STEAL && game.steal_targets.includes(idx)) {
+    game.stealFrom(idx); render();
+  }
+}
+
+function drawHand() {
+  const bar = document.getElementById('hand-bar');
+  bar.innerHTML = '';
+  const p = game.cur();
+
+  // resources
+  let any = false;
+  for (const r of RESOURCES) {
+    if (p.resources[r] === 0 && game.phase !== Ph.DISCARD) continue;
+    const el = document.createElement('div');
+    el.className = 'res-card';
+    el.style.background = RESOURCE_COLORS[r];
+    el.innerHTML = `<div class="cnt">${p.resources[r]}</div><div>${RESOURCE_LABEL[r]}</div>`;
+    el.addEventListener('click', () => onResCardClick(r));
+    bar.appendChild(el);
+    any = true;
+  }
+
+  // dev cards (only if it's currently this player's turn / playable phase)
+  if (game.phase === Ph.MAIN || game.phase === Ph.ROLL) {
+    for (const c of ['knight', 'road_building', 'year_of_plenty', 'monopoly']) {
+      if (p.dev_cards[c] === 0) continue;
+      const el = document.createElement('div');
+      el.className = 'dev-card';
+      const playable = game.phase === Ph.MAIN && !p.played_dev_this_turn;
+      if (!playable) el.classList.add('disabled');
+      el.innerHTML = `<div class="label">${DEV_CARD_NAMES[c]}</div><div class="cnt">x${p.dev_cards[c]}</div>`;
+      el.addEventListener('click', () => { if (playable) { game.playDevCard(c); render(); } });
+      bar.appendChild(el); any = true;
+    }
+    const newCt = Object.values(p.dev_cards_new).reduce((s,n)=>s+n,0);
+    const vpCt = p.dev_cards.vp + p.dev_cards_new.vp;
+    if (newCt || vpCt) {
+      const el = document.createElement('div');
+      el.className = 'hand-empty';
+      el.textContent = `[new:${newCt} vp:${vpCt}]`;
+      bar.appendChild(el);
+    }
+  }
+
+  if (!any) {
+    const el = document.createElement('div');
+    el.className = 'hand-empty';
+    el.textContent = 'No cards';
+    bar.appendChild(el);
+  }
+}
+
+function onResCardClick(r) {
+  if (game.phase === Ph.DISCARD) {
+    const pidx = game.discard_needed.keys().next().value;
+    if (pidx !== undefined && game.players[pidx].idx === game.cur().idx) {
+      // current player only — but discard is for whoever is "front"
+    }
+    game.discardCard(pidx, r); render();
+  } else if (game.phase === Ph.YEAR_OF_PLENTY) {
+    game.yopPick(r); render();
+  } else if (game.phase === Ph.MONOPOLY) {
+    game.monopolyPick(r); render();
+  }
+}
+
+function drawActions() {
+  const bar = document.getElementById('actions-bar');
+  bar.innerHTML = '';
+  const g = game; const p = g.cur();
+
+  const addBtn = (label, opts={}) => {
+    const b = document.createElement('button');
+    b.className = 'action-btn' + (opts.cls ? ' ' + opts.cls : '');
+    b.type = 'button';
+    b.innerHTML = label;
+    if (opts.disabled) b.disabled = true;
+    if (opts.onClick && !opts.disabled) b.addEventListener('click', opts.onClick);
+    bar.appendChild(b);
+    return b;
+  };
+
+  if (g.phase === Ph.GAME_OVER) {
+    addBtn('New Game', { cls: 'wide primary', onClick: () => openNewGameMenu() });
+    return;
+  }
+  if (g.phase === Ph.SETUP_SETTLEMENT || g.phase === Ph.SETUP_ROAD) {
+    addBtn('Tap the board to place', { cls: 'wide', disabled: true });
+    return;
+  }
+  if (g.phase === Ph.ROLL) {
+    addBtn('🎲 Roll Dice', { cls: 'wide primary', onClick: () => { g.rollDice(); render(); } });
+    return;
+  }
+  if (g.phase === Ph.PLACE_ROAD || g.phase === Ph.PLACE_SETTLEMENT || g.phase === Ph.PLACE_CITY) {
+    addBtn('Cancel', { cls: 'wide cancel', onClick: () => { g.phase = Ph.MAIN; g.message = `${p.name}: build, trade, or end turn.`; render(); } });
+    return;
+  }
+  if (g.phase === Ph.ROAD_BUILDING) {
+    addBtn(`Place ${g.road_building_left} more road${g.road_building_left===1?'':'s'}`, { cls: 'wide', disabled: true });
+    return;
+  }
+  if (g.phase === Ph.YEAR_OF_PLENTY) {
+    addBtn(`Pick ${g.yop_picks_left} resource${g.yop_picks_left===1?'':'s'} from hand bar`, { cls: 'wide', disabled: true });
+    return;
+  }
+  if (g.phase === Ph.MONOPOLY) {
+    addBtn('Tap a resource in hand bar', { cls: 'wide', disabled: true });
+    return;
+  }
+  if (g.phase === Ph.DISCARD) {
+    const pidx = g.discard_needed.keys().next().value;
+    addBtn(`${g.players[pidx].name}: tap your resources to discard (${g.discard_needed.get(pidx)} left)`,
+      { cls: 'wide', disabled: true });
+    return;
+  }
+  if (g.phase === Ph.MOVE_ROBBER) {
+    addBtn('Tap a hex to move robber', { cls: 'wide', disabled: true });
+    return;
+  }
+  if (g.phase === Ph.STEAL) {
+    addBtn('Tap a highlighted player above', { cls: 'wide', disabled: true });
+    return;
+  }
+
+  // MAIN phase
+  const rd = canBuild(p, 'road');
+  const st = canBuild(p, 'settlement');
+  const ct = canBuild(p, 'city');
+  const dv = p.canAfford(BUILD_COSTS.dev_card) && g.dev_deck.length;
+  addBtn(`Road<span class="cost">${COST_LABEL.road}</span>`, { disabled: !rd, onClick: () => { g.startBuildRoad(); render(); } });
+  addBtn(`Settle<span class="cost">${COST_LABEL.settlement}</span>`, { disabled: !st, onClick: () => { g.startBuildSettlement(); render(); } });
+  addBtn(`City<span class="cost">${COST_LABEL.city}</span>`, { disabled: !ct, onClick: () => { g.startBuildCity(); render(); } });
+  addBtn(`Dev Card<span class="cost">${COST_LABEL.dev_card}</span>`, { disabled: !dv, onClick: () => { g.buyDevCard(); render(); } });
+  addBtn('Trade Bank/Port', { onClick: () => { openTrade(); } });
+  addBtn('End Turn', { cls: 'primary', disabled: !g.has_rolled, onClick: () => { g.endTurn(); render(); } });
+}
+
+function canBuild(p, kind) {
+  if (game.phase !== Ph.MAIN) return false;
+  if (p.roads.size >= MAX_BUILDINGS.road && kind === 'road') return false;
+  if (p.settlements.size >= MAX_BUILDINGS.settlement && kind === 'settlement') return false;
+  if (p.cities.size >= MAX_BUILDINGS.city && kind === 'city') return false;
+  if (!p.canAfford(BUILD_COSTS[kind])) return false;
+  if (kind === 'road' && !game.validRoadSpots(p.idx).length) return false;
+  if (kind === 'settlement' && !game.validSettlementSpots(p.idx).length) return false;
+  if (kind === 'city' && !game.validCitySpots(p.idx).length) return false;
+  return true;
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function drawModals() {
+  const root = document.getElementById('modal-root');
+  root.innerHTML = '';
+  // Pass-the-phone cover
+  if (game.passingTo !== null) {
+    const cover = document.createElement('div');
+    cover.className = 'pass-cover';
+    const np = game.players[game.passingTo];
+    cover.innerHTML = `
+      <div class="who" style="color:${np.color}">${np.name}</div>
+      <div class="tap">Hand the phone to ${np.name}</div>
+      <button class="modal-btn primary">Tap to continue</button>
+    `;
+    cover.addEventListener('click', () => { game.passingTo = null; render(); });
+    root.appendChild(cover);
+    return;
+  }
+  if (game.phase === Ph.GAME_OVER) {
+    const w = game.players[game.winner];
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg';
+    bg.innerHTML = `
+      <div class="modal center">
+        <h2>${w.name} wins!</h2>
+        <p>${w.victoryPoints()} victory points</p>
+        <div class="modal-actions">
+          <button class="modal-btn primary" id="ng3">New Game (3p)</button>
+          <button class="modal-btn primary" id="ng4">New Game (4p)</button>
+        </div>
+      </div>`;
+    bg.querySelector('#ng3').addEventListener('click', () => newGame(3));
+    bg.querySelector('#ng4').addEventListener('click', () => newGame(4));
+    root.appendChild(bg);
+  }
+}
+
+function openTrade() {
+  const root = document.getElementById('modal-root');
+  const p = game.cur();
+  let give = null, recv = null;
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = `
+    <h2>Bank / Port Trade</h2>
+    <p class="small">Best ratio depends on your settlement ports.</p>
+    <div><b>Give:</b></div>
+    <div class="modal-row" id="give-row"></div>
+    <div><b>Receive:</b></div>
+    <div class="modal-row" id="recv-row"></div>
+    <div class="modal-actions">
+      <button class="modal-btn" id="cx">Cancel</button>
+      <button class="modal-btn primary" id="ok" disabled>Confirm</button>
+    </div>
+  `;
+  bg.appendChild(m); root.appendChild(bg);
+
+  const giveRow = m.querySelector('#give-row');
+  const recvRow = m.querySelector('#recv-row');
+  for (const r of RESOURCES) {
+    const ratio = game.bestRatio(p, r);
+    const g = document.createElement('div');
+    g.className = 'pick';
+    g.style.background = RESOURCE_COLORS[r];
+    g.innerHTML = `<div>${r.toUpperCase()}</div><div class="sub">${ratio}:1 (${p.resources[r]})</div>`;
+    g.addEventListener('click', () => { give = r; refresh(); });
+    g.dataset.r = r; giveRow.appendChild(g);
+
+    const re = document.createElement('div');
+    re.className = 'pick';
+    re.style.background = RESOURCE_COLORS[r];
+    re.innerHTML = `<div>${r.toUpperCase()}</div>`;
+    re.addEventListener('click', () => { recv = r; refresh(); });
+    re.dataset.r = r; recvRow.appendChild(re);
+  }
+  function refresh() {
+    for (const el of giveRow.children) el.classList.toggle('selected', el.dataset.r === give);
+    for (const el of recvRow.children) el.classList.toggle('selected', el.dataset.r === recv);
+    const ok = give && recv && give !== recv && p.resources[give] >= game.bestRatio(p, give);
+    m.querySelector('#ok').disabled = !ok;
+  }
+  m.querySelector('#cx').addEventListener('click', () => { root.innerHTML = ''; });
+  m.querySelector('#ok').addEventListener('click', () => {
+    game.bankTrade(give, recv); root.innerHTML = ''; render();
+  });
+}
+
+function openMenu() {
+  const root = document.getElementById('modal-root');
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `
+    <div class="modal">
+      <h2>Menu</h2>
+      <div class="modal-actions" style="flex-wrap:wrap;justify-content:center;gap:6px;">
+        <button class="modal-btn" id="ng3">New 3p Game</button>
+        <button class="modal-btn" id="ng4">New 4p Game</button>
+        <button class="modal-btn" id="lg">Log</button>
+        <button class="modal-btn" id="cx">Close</button>
+      </div>
+    </div>`;
+  bg.addEventListener('click', (e) => { if (e.target === bg) bg.remove(); });
+  bg.querySelector('#cx').addEventListener('click', () => bg.remove());
+  bg.querySelector('#ng3').addEventListener('click', () => { bg.remove(); newGame(3); });
+  bg.querySelector('#ng4').addEventListener('click', () => { bg.remove(); newGame(4); });
+  bg.querySelector('#lg').addEventListener('click', () => { bg.remove(); openLog(); });
+  root.appendChild(bg);
+}
+
+function openLog() {
+  const root = document.getElementById('modal-root');
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `
+    <div class="modal">
+      <h2>Game Log</h2>
+      <div style="max-height: 50vh; overflow:auto; font-size: 12px; line-height:1.4; color:#cdd;">
+        ${game.log.map(l => '<div>'+escapeHtml(l)+'</div>').join('')}
+      </div>
+      <div class="modal-actions"><button class="modal-btn" id="cx">Close</button></div>
+    </div>`;
+  bg.querySelector('#cx').addEventListener('click', () => bg.remove());
+  root.appendChild(bg);
+}
+
+function openNewGameMenu() {
+  const root = document.getElementById('modal-root');
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `
+    <div class="modal center">
+      <h2>New Game</h2>
+      <div class="modal-actions" style="justify-content:center;gap:8px;">
+        <button class="modal-btn primary" id="ng3">3 Players</button>
+        <button class="modal-btn primary" id="ng4">4 Players</button>
+      </div>
+    </div>`;
+  bg.querySelector('#ng3').addEventListener('click', () => newGame(3));
+  bg.querySelector('#ng4').addEventListener('click', () => newGame(4));
+  root.appendChild(bg);
+}
+
+function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// kick off
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
