@@ -146,27 +146,216 @@
 
   .center { text-align: center; }
   .small { font-size: 11px; color: #aab; }
+
+  [hidden] { display: none !important; }
+  .game-app { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+
+  /* ===== GAME SELECT ===== */
+  #game-select-screen {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 24px; min-height: 100%;
+  }
+  .gs-card {
+    width: 100%; max-width: 380px;
+    background: #243243; border-radius: 16px; padding: 24px 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  }
+  .gs-card h1 {
+    margin: 0 0 4px 0; font-size: 30px; text-align: center;
+    background: linear-gradient(90deg, #f0c844, #a55a2e); -webkit-background-clip: text;
+    background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .gs-sub { margin: 0 0 20px 0; text-align: center; color: #aab; font-size: 13px; }
+  .gs-btn {
+    display: block; width: 100%; padding: 14px 14px; margin-bottom: 10px;
+    background: #4a5870; color: #fff; border: 1px solid #5a6890;
+    border-radius: 10px; cursor: pointer; text-align: left;
+  }
+  .gs-btn:hover { background: #5a6890; }
+  .gs-title { display: block; font-size: 17px; font-weight: 800; }
+  .gs-desc  { display: block; font-size: 11px; color: #cdd; margin-top: 3px; }
+  .gs-foot  { margin: 14px 0 0 0; text-align: center; color: #889; font-size: 11px; }
+
+  /* ===== RIVALS (Catan Duel) ===== */
+  #rv-status {
+    background: #243243; padding: 6px 8px; flex: 0 0 auto;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid #1a2230;
+  }
+  #rv-player-tag { font-weight: 800; padding: 4px 10px; border-radius: 6px; background:#000; font-size: 13px; }
+  #rv-phase-msg { flex: 1; font-size: 13px; line-height: 1.2; }
+  #rv-dice { font-weight: bold; font-size: 14px; padding: 2px 8px; background:#000; border-radius:4px; min-width: 30px; text-align: center; }
+
+  .rv-side {
+    background: #1a2230; padding: 6px; flex: 1 1 0; min-height: 0;
+    display: flex; flex-direction: column; gap: 4px;
+    overflow-y: auto;
+  }
+  .rv-side.rv-self  { border-top: 2px solid #2a8050; }
+  .rv-side.rv-opp   { border-bottom: 2px solid #803030; opacity: 0.95; }
+  .rv-name-row {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; padding: 0 4px;
+  }
+  .rv-name-row .name { font-weight: 800; }
+  .rv-name-row .vp   { font-weight: 800; font-size: 16px; margin-left: auto; }
+  .rv-stats { font-size: 11px; color: #aab; padding: 0 4px 2px; }
+  .rv-row { display: flex; gap: 4px; flex-wrap: nowrap; overflow-x: auto; padding: 2px; }
+  .rv-row::-webkit-scrollbar { height: 0; }
+
+  .rv-region {
+    flex: 0 0 auto; width: 64px; padding: 4px;
+    border: 2px solid #000; border-radius: 8px;
+    color: #111; font-size: 10px; line-height: 1.2; text-align: center;
+    cursor: default;
+  }
+  .rv-region .num {
+    display: inline-block; background: #f5ebc8; color: #222;
+    width: 16px; height: 16px; border-radius: 50%;
+    font-size: 11px; font-weight: 800; line-height: 16px; text-align: center;
+    margin-bottom: 2px;
+  }
+  .rv-region.hot .num { color: #bf2222; }
+  .rv-region .pool {
+    margin-top: 3px; font-weight: 800; font-size: 14px;
+  }
+  .rv-region .name { font-weight: 700; font-size: 10px; }
+  .rv-region.boosted { box-shadow: inset 0 0 0 2px #ffd070; }
+
+  .rv-build {
+    flex: 0 0 auto; width: 64px; padding: 6px 4px;
+    border: 2px solid #000; border-radius: 8px;
+    text-align: center; font-size: 11px; font-weight: 700;
+    background: #2a3545; color: #fff;
+  }
+  .rv-build.settlement { background: #3a8050; }
+  .rv-build.city       { background: #80502a; }
+  .rv-build.road       { background: #404a5c; }
+
+  .rv-card, .rv-handcard {
+    flex: 0 0 auto; width: 90px; height: 110px;
+    border: 1px solid #000; border-radius: 8px;
+    padding: 6px; font-size: 10px; line-height: 1.2;
+    background: #d4d8f0; color: #111;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .rv-handcard { width: 100px; height: 124px; cursor: pointer; }
+  .rv-handcard:disabled, .rv-handcard.disabled { opacity: 0.5; }
+  .rv-card .ttl, .rv-handcard .ttl { font-weight: 800; font-size: 12px; }
+  .rv-card .desc, .rv-handcard .desc { font-size: 9px; color: #333; line-height: 1.2; }
+  .rv-card .cost, .rv-handcard .cost { font-size: 10px; font-weight: 700; }
+
+  #rv-mid {
+    background: #2a3545; padding: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    flex: 0 0 auto;
+  }
+  .rv-die {
+    width: 44px; height: 44px; background: #f0e0c0; color: #111;
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 900; border: 1px solid #000;
+  }
+  .rv-die.event { background: #bf6633; color: #fff; }
+  .rv-event-label { font-size: 11px; color: #cdd; margin-top: 2px; text-align: center; }
+  .rv-event-block { display: flex; flex-direction: column; align-items: center; }
+
+  #rv-actions {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; padding: 4px;
+    background: #1a2230; flex: 0 0 auto;
+  }
+
+  .rv-resbar {
+    display: flex; gap: 3px; flex-wrap: nowrap; padding: 2px 4px;
+    overflow-x: auto;
+  }
+  .rv-resbar::-webkit-scrollbar { height: 0; }
+  .rv-rescell {
+    flex: 0 0 auto; width: 36px; height: 32px; border-radius: 4px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #111; font-size: 8px; font-weight: 700; border: 1px solid #000;
+    line-height: 1;
+  }
+  .rv-rescell .cnt { font-size: 14px; }
 </style>
 </head>
 <body>
-  <div id="status-bar">
-    <span id="player-tag">Red</span>
-    <span id="phase-msg">Loading…</span>
-    <span id="dice"></span>
-    <button id="menu-btn" class="icon-btn" type="button">⋮</button>
+  <!-- Game-select boot screen (shown first) -->
+  <div id="game-select-screen">
+    <div class="gs-card">
+      <h1>Catan</h1>
+      <p class="gs-sub">Pick a game</p>
+      <button class="gs-btn" data-game="catan">
+        <span class="gs-title">Catan</span>
+        <span class="gs-desc">3-4 players · standard rules · ~30-60 min</span>
+      </button>
+      <button class="gs-btn" data-game="rivals">
+        <span class="gs-title">Catan Duel</span>
+        <span class="gs-desc">2 players · card duel (Rivals-style) · ~20-40 min</span>
+      </button>
+      <p class="gs-foot">Both games are hot-seat — pass the phone between turns.</p>
+    </div>
   </div>
-  <div id="board-wrap"><canvas id="board"></canvas></div>
-  <div id="players-bar"></div>
-  <div id="hand-bar"></div>
-  <div id="actions-bar"></div>
+
+  <!-- Catan app shell (initially hidden, swapped in by Catan.start()) -->
+  <div id="catan-app" class="game-app" hidden>
+    <div id="status-bar">
+      <span id="player-tag">Red</span>
+      <span id="phase-msg">Loading…</span>
+      <span id="dice"></span>
+      <button id="menu-btn" class="icon-btn" type="button">⋮</button>
+    </div>
+    <div id="board-wrap"><canvas id="board"></canvas></div>
+    <div id="players-bar"></div>
+    <div id="hand-bar"></div>
+    <div id="actions-bar"></div>
+  </div>
+
+  <!-- Rivals (Catan Duel) app shell (initially hidden) -->
+  <div id="rivals-app" class="game-app" hidden>
+    <div id="rv-status">
+      <span id="rv-player-tag">P1</span>
+      <span id="rv-phase-msg">Loading…</span>
+      <span id="rv-dice"></span>
+      <button id="rv-menu-btn" class="icon-btn" type="button">⋮</button>
+    </div>
+    <div id="rv-opp" class="rv-side"></div>
+    <div id="rv-mid"></div>
+    <div id="rv-self" class="rv-side"></div>
+    <div id="rv-actions"></div>
+  </div>
+
   <div id="modal-root"></div>
 
 <script>
 'use strict';
 
 // ============================================================
-// CONSTANTS
+// SHARED SHELL UTILITIES
 // ============================================================
+const Shell = (() => {
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function clearModals() { document.getElementById('modal-root').innerHTML = ''; }
+  function showApp(id) {
+    clearModals();
+    document.getElementById('game-select-screen').hidden = true;
+    document.getElementById('catan-app').hidden = (id !== 'catan-app');
+    document.getElementById('rivals-app').hidden = (id !== 'rivals-app');
+  }
+  function showSelect() {
+    clearModals();
+    document.getElementById('game-select-screen').hidden = false;
+    document.getElementById('catan-app').hidden = true;
+    document.getElementById('rivals-app').hidden = true;
+  }
+  return { escapeHtml, clearModals, showApp, showSelect };
+})();
+
+// ============================================================
+// CATAN
+// ============================================================
+const Catan = (() => {
 const RESOURCES = ['wood', 'brick', 'sheep', 'wheat', 'ore'];
 const TERRAIN_RESOURCE = { forest:'wood', hills:'brick', pasture:'sheep', fields:'wheat', mountains:'ore', desert:null };
 const TERRAIN_COLORS = {
@@ -973,24 +1162,19 @@ let canvas, ctx;
 let canvasDPR = 1;
 let canvasSizePx = 320;
 
-function init() {
-  canvas = document.getElementById('board');
-  ctx = canvas.getContext('2d');
-
-  document.getElementById('menu-btn').addEventListener('click', openMenu);
-
-  // events
-  canvas.addEventListener('pointerdown', onCanvasPointerDown, { passive: false });
-
-  window.addEventListener('resize', onResize);
-  window.addEventListener('orientationchange', onResize);
-
-  newGame(3);
-
-  // SW
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+let _wired = false;
+function start(numPlayers = 3) {
+  Shell.showApp('catan-app');
+  if (!_wired) {
+    canvas = document.getElementById('board');
+    ctx = canvas.getContext('2d');
+    document.getElementById('menu-btn').addEventListener('click', openMenu);
+    canvas.addEventListener('pointerdown', onCanvasPointerDown, { passive: false });
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    _wired = true;
   }
+  newGame(numPlayers);
 }
 
 function newGame(numPlayers) {
@@ -1714,6 +1898,7 @@ function openMenu() {
         <button class="modal-btn" id="ng3">New 3p Game</button>
         <button class="modal-btn" id="ng4">New 4p Game</button>
         <button class="modal-btn" id="lg">Log</button>
+        <button class="modal-btn" id="back">Back to Game Select</button>
         <button class="modal-btn" id="cx">Close</button>
       </div>
     </div>`;
@@ -1723,6 +1908,7 @@ function openMenu() {
   bg.querySelector('#ng3').addEventListener('click', () => { bg.remove(); newGame(3); });
   bg.querySelector('#ng4').addEventListener('click', () => { bg.remove(); newGame(4); });
   bg.querySelector('#lg').addEventListener('click', () => { bg.remove(); openLog(); });
+  bg.querySelector('#back').addEventListener('click', () => { bg.remove(); Shell.showSelect(); });
   root.appendChild(bg);
 }
 
@@ -1846,10 +2032,855 @@ function openNewGameMenu() {
   root.appendChild(bg);
 }
 
-function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeHtml(s) { return Shell.escapeHtml(s); }
 
-// kick off
-window.addEventListener('DOMContentLoaded', init);
+return {
+  start,
+  // Expose for simulation/testing only.
+  _internals: () => ({ game, BUILD_COSTS, MAX_BUILDINGS, PORT_PLACEMENTS, RESOURCES, render }),
+};
+})();
+
+// ============================================================
+// RIVALS (Catan Duel)
+// ============================================================
+// A simplified, faithful-in-spirit take on Catan's 2-player card duel.
+// Scope: 2 player hot-seat, 7 VP win, d6 production die + d6 event die,
+// 6 regions per player (one of each resource type), expansion deck of 12
+// unique buildings (24 cards total), building costs match base Catan.
+// Differences from boxed Rivals (intentional, to keep scope manageable):
+//   * Linear, non-spatial principality — building counts only, no tableau adjacency.
+//   * Smaller card pool & no separate sub-decks (one shared deck).
+//   * Events are a simplified d6 with all-player effects.
+// ============================================================
+const Rivals = (() => {
+  const RES = ['wood', 'brick', 'sheep', 'wheat', 'ore', 'gold'];
+  const RES_SHORT = { wood:'Wd', brick:'Br', sheep:'Sh', wheat:'Wh', ore:'Or', gold:'Go' };
+  const RES_COLOR = { wood:'#226b22', brick:'#a55a2e', sheep:'#8acf52', wheat:'#f0c844', ore:'#7c7c7c', gold:'#d4af37' };
+  const REGION_NAME = { wood:'Forest', brick:'Hills', sheep:'Pasture', wheat:'Fields', ore:'Mtns', gold:'Gold' };
+  const PLAYER_COLORS = ['#dc3838', '#3a6cd0'];
+  const PLAYER_NAMES  = ['Red', 'Blue'];
+
+  const WIN_VP = 7;
+  const HAND_LIMIT = 3;
+  const REGION_CAP = 3;
+  const MAX_SETTLEMENTS = 5;
+  const MAX_CITIES = 4;
+  const MAX_ROADS = 8;
+
+  const COSTS = {
+    road:       { wood:1, brick:1 },
+    settlement: { wood:1, brick:1, wheat:1, sheep:1 },
+    city:       { ore:3, wheat:2 },
+  };
+
+  const CARDS = [
+    { id:'lumber_camp',   name:'Lumber Camp',   cost:{wood:1, brick:1},          kind:'boost', boosts:'wood',  desc:'Forest produces +1 wood' },
+    { id:'brick_factory', name:'Brick Factory', cost:{wood:1, ore:1},            kind:'boost', boosts:'brick', desc:'Hills produces +1 brick' },
+    { id:'mill',          name:'Mill',          cost:{brick:1, wheat:1},         kind:'boost', boosts:'wheat', desc:'Fields produces +1 wheat' },
+    { id:'weaver',        name:'Weaver',        cost:{sheep:1, wheat:1},         kind:'boost', boosts:'sheep', desc:'Pasture produces +1 sheep' },
+    { id:'smithy',        name:'Smithy',        cost:{wood:1, ore:1},            kind:'boost', boosts:'ore',   desc:'Mountains produces +1 ore' },
+    { id:'mint',          name:'Mint',          cost:{brick:1, gold:1},          kind:'boost', boosts:'gold',  desc:'Gold Field produces +1 gold' },
+    { id:'library',       name:'Library',       cost:{wood:1, wheat:1, ore:1},   kind:'vp',    vp:1,          desc:'+1 VP' },
+    { id:'abbey',         name:'Abbey',         cost:{brick:1, ore:1, wheat:1},  kind:'vp',    vp:1,          desc:'+1 VP' },
+    { id:'marketplace',   name:'Marketplace',   cost:{wood:1, brick:1},          kind:'trade',                desc:'Bank trades 3:1' },
+    { id:'knight',        name:'Knight',        cost:{wheat:1, ore:1, sheep:1},  kind:'knight',               desc:'+1 strength for Tournament event' },
+    { id:'fortress',      name:'Fortress',      cost:{brick:2, ore:1},           kind:'fortress', vp:1,       desc:'+1 VP; Brigand cannot rob you' },
+    { id:'merchant',      name:'Merchant',      cost:{sheep:1, gold:1},          kind:'merchant', vp:1,       desc:'+1 VP; bank trades 2:1 for one resource' },
+  ];
+  const CARD_BY_ID = Object.fromEntries(CARDS.map(c => [c.id, c]));
+
+  const EVENTS = {
+    1: { name:'Brigand', desc:'Players with 8+ resources lose down to 7 (Fortress prevents).' },
+    2: { name:'Trade',   desc:'Bank ratios are 2:1 for both players this turn.' },
+    3: { name:'Harvest', desc:'Each player picks 1 region to produce 1 resource.' },
+    4: { name:'Plenty',  desc:'Each player picks 1 resource from the bank.' },
+    5: { name:'Tournament', desc:'Player with most Knights gains 1 resource of choice (tie: both).' },
+    6: { name:'Festival',desc:'Players with 4+ VP gain 1 gold.' },
+  };
+
+  const Ph = {
+    ROLL: 'rv_roll',
+    EV_HARVEST: 'rv_ev_harvest',
+    EV_PLENTY:  'rv_ev_plenty',
+    EV_TOURN:   'rv_ev_tourn',
+    MAIN:       'rv_main',
+    DISCARD:    'rv_discard',
+    GAME_OVER:  'rv_over',
+  };
+
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  function makeDeck() {
+    const d = [];
+    for (const c of CARDS) for (let i = 0; i < 2; i++) d.push(c.id);
+    return shuffle(d);
+  }
+  function makeRegions() {
+    const nums = shuffle([1,2,3,4,5,6]);
+    return RES.map((t, i) => ({ type: t, dieNum: nums[i], pool: 1 }));
+  }
+  function newPlayer(idx) {
+    return {
+      idx,
+      name: PLAYER_NAMES[idx],
+      color: PLAYER_COLORS[idx],
+      resources: { wood:0, brick:0, sheep:0, wheat:0, ore:0, gold:0 },
+      regions: makeRegions(),
+      hand: [],
+      played: [],   // ids of played cards
+      settlements: 2,
+      cities: 0,
+      roads: 1,
+      hasMarketplace: false,
+      hasMerchant: false,
+      hasFortress: false,
+      knights: 0,
+      vpCards: 0,    // VP from cards
+      eventTrade: false, // temporary: this turn the bank ratio is 2:1
+      // pending event picks queued for this player (count of how many resources they still need to pick this event)
+      pendingPicks: 0,
+    };
+  }
+  function vpOf(p) { return p.settlements + 2 * p.cities + p.vpCards; }
+  function totalRes(p) { return RES.reduce((s, r) => s + p.resources[r], 0); }
+  function bestRatio(p, r) {
+    let ratio = 4;
+    if (p.hasMarketplace) ratio = 3;
+    if (p.hasMerchant) ratio = Math.min(ratio, 2);
+    if (p.eventTrade) ratio = Math.min(ratio, 2);
+    return ratio;
+  }
+  function canAfford(p, cost) { for (const r in cost) if (p.resources[r] < cost[r]) return false; return true; }
+  function pay(p, cost) { for (const r in cost) p.resources[r] -= cost[r]; }
+
+  // =========================================================================
+  // GAME STATE
+  // =========================================================================
+  let game = null;
+
+  function newGame() {
+    game = {
+      players: [newPlayer(0), newPlayer(1)],
+      current: 0,
+      phase: Ph.ROLL,
+      dice: { prod: 0, event: 0 },
+      lastEvent: null,
+      deck: makeDeck(),
+      discard: [],
+      log: [],
+      message: 'Red: roll the dice to start your turn.',
+      passingTo: null,
+      winner: null,
+      pickQueue: [],   // for event resolution: list of player idxs awaiting a pick
+      pickKind: null,  // 'plenty' | 'harvest' | 'tourn'
+    };
+    // initial hands
+    for (const p of game.players) for (let i = 0; i < HAND_LIMIT; i++) drawCard(p);
+    addLog(`Red ${game.players[0].regions.map(r => r.type[0].toUpperCase()+r.dieNum).join(' ')}`);
+    addLog(`Blue ${game.players[1].regions.map(r => r.type[0].toUpperCase()+r.dieNum).join(' ')}`);
+  }
+
+  function addLog(s) { game.log.push(s); if (game.log.length > 30) game.log.shift(); }
+  function cur() { return game.players[game.current]; }
+  function other() { return game.players[1 - game.current]; }
+  function viewer() {
+    if (game.pickQueue && game.pickQueue.length) return game.players[game.pickQueue[0]];
+    return cur();
+  }
+
+  function drawCard(p) {
+    if (!game.deck.length) {
+      if (game.discard.length) { game.deck = shuffle(game.discard); game.discard = []; }
+      else return;
+    }
+    p.hand.push(game.deck.pop());
+  }
+
+  // =========================================================================
+  // TURN MECHANICS
+  // =========================================================================
+  function rollDice() {
+    if (game.phase !== Ph.ROLL) return;
+    const prod = 1 + Math.floor(Math.random() * 6);
+    const event = 1 + Math.floor(Math.random() * 6);
+    game.dice = { prod, event };
+    game.lastEvent = EVENTS[event];
+    addLog(`${cur().name} rolled prod=${prod} event=${event} (${EVENTS[event].name})`);
+    distributeProduction(prod);
+    resolveEvent(event);
+  }
+
+  // region.pool mirrors the player's stockpile of that resource type 1:1.
+  // gainResource fills regions of the matching type up to REGION_CAP each;
+  // payCost / spendResource drains them in order.
+  function gainResource(p, r, amount) {
+    if (amount <= 0) return 0;
+    // Find regions of type r and fill them up to cap collectively
+    const regions = p.regions.filter(g => g.type === r);
+    let remaining = amount;
+    let gained = 0;
+    for (const reg of regions) {
+      const space = REGION_CAP - reg.pool;
+      const take = Math.min(remaining, space);
+      reg.pool += take; remaining -= take; gained += take;
+      if (!remaining) break;
+    }
+    p.resources[r] += gained;
+    return gained;
+  }
+  function spendResource(p, r, amount) {
+    p.resources[r] -= amount;
+    let rem = amount;
+    for (const reg of p.regions) {
+      if (reg.type !== r) continue;
+      const take = Math.min(rem, reg.pool);
+      reg.pool -= take; rem -= take;
+      if (!rem) break;
+    }
+  }
+  function payCost(p, cost) {
+    for (const r in cost) spendResource(p, r, cost[r]);
+  }
+
+  function distributeProduction(num) {
+    for (const p of game.players) {
+      const boosts = {};
+      for (const cid of p.played) {
+        const c = CARD_BY_ID[cid];
+        if (c.kind === 'boost') boosts[c.boosts] = (boosts[c.boosts] || 0) + 1;
+      }
+      for (const region of p.regions) {
+        if (region.dieNum !== num) continue;
+        const amount = 1 + (boosts[region.type] || 0);
+        gainResource(p, region.type, amount);
+      }
+    }
+  }
+
+  function resolveEvent(num) {
+    const p0 = game.players[0], p1 = game.players[1];
+    switch (num) {
+      case 1: { // Brigand
+        for (const p of game.players) {
+          if (p.hasFortress) continue;
+          while (totalRes(p) > 7) {
+            // lose a random resource
+            const pool = [];
+            for (const r of RES) for (let i = 0; i < p.resources[r]; i++) pool.push(r);
+            const r = pool[Math.floor(Math.random() * pool.length)];
+            spendResource(p, r, 1);
+            addLog(`Brigand: ${p.name} loses 1 ${r}.`);
+          }
+        }
+        afterEvent();
+        break;
+      }
+      case 2: { // Trade
+        for (const p of game.players) p.eventTrade = true;
+        addLog('Trade event: bank ratios are 2:1 this turn.');
+        afterEvent();
+        break;
+      }
+      case 3: { // Harvest
+        game.pickQueue = [game.current, 1 - game.current];
+        game.pickKind = 'harvest';
+        game.phase = Ph.EV_HARVEST;
+        nextEventPicker();
+        break;
+      }
+      case 4: { // Plenty
+        game.pickQueue = [game.current, 1 - game.current];
+        game.pickKind = 'plenty';
+        game.phase = Ph.EV_PLENTY;
+        nextEventPicker();
+        break;
+      }
+      case 5: { // Tournament
+        const k0 = p0.knights, k1 = p1.knights;
+        if (!k0 && !k1) { addLog('Tournament: nobody has knights.'); afterEvent(); break; }
+        if (k0 === k1) {
+          game.pickQueue = [game.current, 1 - game.current];
+        } else if (k0 > k1) {
+          game.pickQueue = [0];
+        } else {
+          game.pickQueue = [1];
+        }
+        game.pickKind = 'tourn';
+        game.phase = Ph.EV_TOURN;
+        nextEventPicker();
+        break;
+      }
+      case 6: { // Festival
+        for (const p of game.players) {
+          if (vpOf(p) >= 4) {
+            const got = gainResource(p, 'gold', 1);
+            if (got) addLog(`Festival: ${p.name} +1 gold.`);
+          }
+        }
+        afterEvent();
+        break;
+      }
+    }
+  }
+
+  function nextEventPicker() {
+    while (game.pickQueue.length) {
+      const pidx = game.pickQueue[0];
+      // Hand-off cover if the picker isn't the current visible viewer
+      if (pidx !== game.current && game.passingTo === null) {
+        game.passingTo = pidx;
+      }
+      // The rest is handled by user click via eventPick().
+      const ev = game.pickKind;
+      const p = game.players[pidx];
+      if (ev === 'harvest') game.message = `${p.name}: tap a region to produce 1 resource (Harvest).`;
+      else if (ev === 'plenty') game.message = `${p.name}: tap a resource to gain (Plenty).`;
+      else if (ev === 'tourn') game.message = `${p.name}: tap a resource to gain (Tournament).`;
+      return;
+    }
+    afterEvent();
+  }
+
+  function eventPick(pidx, payload) {
+    if (!game.pickQueue.length || game.pickQueue[0] !== pidx) return;
+    const p = game.players[pidx];
+    const kind = game.pickKind;
+    if (kind === 'harvest') {
+      // payload is region index
+      const region = p.regions[payload];
+      if (!region) return;
+      const got = gainResource(p, region.type, 1);
+      addLog(`Harvest: ${p.name} picks ${region.type} (+${got}).`);
+    } else if (kind === 'plenty') {
+      // payload is a resource name
+      if (!RES.includes(payload)) return;
+      const got = gainResource(p, payload, 1);
+      addLog(`Plenty: ${p.name} +${got} ${payload}.`);
+    } else if (kind === 'tourn') {
+      if (!RES.includes(payload)) return;
+      const got = gainResource(p, payload, 1);
+      addLog(`Tournament: ${p.name} +${got} ${payload}.`);
+    }
+    // pop
+    game.pickQueue.shift();
+    if (game.pickQueue.length) {
+      // hand off to next
+      const next = game.pickQueue[0];
+      if (next !== pidx) game.passingTo = next;
+      nextEventPicker();
+    } else {
+      afterEvent();
+    }
+  }
+
+  function afterEvent() {
+    game.phase = Ph.MAIN;
+    game.message = `${cur().name}: build, play cards, or end turn.`;
+    checkWin();
+  }
+
+  // =========================================================================
+  // BUILDING
+  // =========================================================================
+  function buildRoad() {
+    if (game.phase !== Ph.MAIN) return;
+    const p = cur();
+    if (!canAfford(p, COSTS.road) || p.roads >= MAX_ROADS) return;
+    payCost(p, COSTS.road);
+    p.roads += 1;
+    addLog(`${p.name} builds a road.`);
+    checkWin();
+  }
+  function buildSettlement() {
+    if (game.phase !== Ph.MAIN) return;
+    const p = cur();
+    if (!canAfford(p, COSTS.settlement) || p.settlements + p.cities >= MAX_SETTLEMENTS) return;
+    if (p.roads < p.settlements + p.cities) return; // need a road to extend
+    payCost(p, COSTS.settlement);
+    p.settlements += 1;
+    addLog(`${p.name} builds a settlement.`);
+    checkWin();
+  }
+  function buildCity() {
+    if (game.phase !== Ph.MAIN) return;
+    const p = cur();
+    if (!canAfford(p, COSTS.city) || p.cities >= MAX_CITIES || p.settlements <= 0) return;
+    payCost(p, COSTS.city);
+    p.settlements -= 1;
+    p.cities += 1;
+    addLog(`${p.name} upgrades a settlement to a city.`);
+    checkWin();
+  }
+  function playCard(handIdx) {
+    if (game.phase !== Ph.MAIN) return;
+    const p = cur();
+    const cid = p.hand[handIdx];
+    if (!cid) return;
+    const c = CARD_BY_ID[cid];
+    if (!canAfford(p, c.cost)) return;
+    payCost(p, c.cost);
+    p.hand.splice(handIdx, 1);
+    p.played.push(cid);
+    if (c.kind === 'vp')        p.vpCards += c.vp;
+    if (c.kind === 'merchant') { p.vpCards += c.vp; p.hasMerchant = true; }
+    if (c.kind === 'fortress') { p.vpCards += c.vp; p.hasFortress = true; }
+    if (c.kind === 'trade')     p.hasMarketplace = true;
+    if (c.kind === 'knight')    p.knights += 1;
+    addLog(`${p.name} plays ${c.name}.`);
+    checkWin();
+  }
+
+  function bankTrade(give, recv) {
+    if (game.phase !== Ph.MAIN || give === recv) return;
+    const p = cur();
+    const ratio = bestRatio(p, give);
+    if (p.resources[give] < ratio) return;
+    spendResource(p, give, ratio);
+    gainResource(p, recv, 1);
+    addLog(`${p.name} trades ${ratio} ${give} -> 1 ${recv}.`);
+  }
+
+  function endTurn() {
+    if (game.phase !== Ph.MAIN) return;
+    checkWin();
+    if (game.phase === Ph.GAME_OVER) return;
+    const p = cur();
+    // discard down to limit, then draw back up
+    while (p.hand.length > HAND_LIMIT) game.discard.push(p.hand.pop());
+    while (p.hand.length < HAND_LIMIT && (game.deck.length || game.discard.length)) drawCard(p);
+    // clear per-turn flags
+    for (const x of game.players) x.eventTrade = false;
+    game.current = 1 - game.current;
+    game.phase = Ph.ROLL;
+    game.message = `${cur().name}: roll the dice to start your turn.`;
+    game.passingTo = game.current;
+  }
+
+  function checkWin() {
+    for (const p of game.players) {
+      if (vpOf(p) >= WIN_VP) {
+        game.winner = p.idx;
+        game.phase = Ph.GAME_OVER;
+        game.message = `${p.name} wins with ${vpOf(p)} VP!`;
+        return;
+      }
+    }
+  }
+
+  // =========================================================================
+  // UI
+  // =========================================================================
+  let _wired = false;
+  function start() {
+    Shell.showApp('rivals-app');
+    if (!_wired) {
+      document.getElementById('rv-menu-btn').addEventListener('click', openMenu);
+      _wired = true;
+    }
+    newGame();
+    render();
+  }
+
+  function render() {
+    const p = viewer();
+    const tag = document.getElementById('rv-player-tag');
+    tag.textContent = p.name;
+    tag.style.background = p.color;
+    tag.style.color = (p.color === '#f0f0f5') ? '#111' : '#fff';
+    document.getElementById('rv-phase-msg').textContent = game.message;
+    const dice = document.getElementById('rv-dice');
+    if (game.dice.prod) {
+      dice.textContent = `${game.dice.prod}/${game.dice.event}`;
+      dice.style.display = 'inline-block';
+    } else dice.style.display = 'none';
+
+    // Opponent (the non-viewer)
+    const opp = game.players[1 - p.idx];
+    drawSide(document.getElementById('rv-opp'), opp, false);
+    // Self (viewer)
+    drawSide(document.getElementById('rv-self'), p, true);
+
+    drawMid();
+    drawActions();
+    drawModals();
+  }
+
+  function drawSide(root, p, showHand) {
+    root.classList.toggle('rv-self', showHand);
+    root.classList.toggle('rv-opp', !showHand);
+    root.innerHTML = '';
+
+    const headerHTML = `
+      <div class="rv-name-row">
+        <span class="name" style="color:${p.color}">${p.name}${showHand ? '' : ' (opponent)'}</span>
+        <span class="vp">VP: ${vpOf(p)}</span>
+      </div>
+      <div class="rv-stats">S:${p.settlements} C:${p.cities} R:${p.roads} K:${p.knights} ${p.hasFortress?'★F ':''}${p.hasMarketplace?'★M ':''}${p.hasMerchant?'★Mc ':''}Hand:${p.hand.length}</div>
+    `;
+    const header = document.createElement('div');
+    header.innerHTML = headerHTML;
+    root.appendChild(header);
+
+    // Resources bar (only visible if showHand or always show counts)
+    const resbar = document.createElement('div');
+    resbar.className = 'rv-resbar';
+    for (const r of RES) {
+      const cell = document.createElement('div');
+      cell.className = 'rv-rescell';
+      cell.style.background = RES_COLOR[r];
+      cell.innerHTML = `<div class="cnt">${showHand ? p.resources[r] : '?'}</div><div>${RES_SHORT[r]}</div>`;
+      resbar.appendChild(cell);
+    }
+    root.appendChild(resbar);
+
+    // Regions row
+    const regions = document.createElement('div');
+    regions.className = 'rv-row';
+    for (let i = 0; i < p.regions.length; i++) {
+      const region = p.regions[i];
+      const rd = document.createElement('div');
+      rd.className = 'rv-region';
+      if (region.dieNum === 6 || region.dieNum === 1) rd.classList.add('hot');
+      if (game.dice.prod === region.dieNum) rd.classList.add('boosted');
+      rd.style.background = RES_COLOR[region.type];
+      rd.innerHTML = `<span class="num">${region.dieNum}</span><div class="name">${REGION_NAME[region.type]}</div><div class="pool">${region.pool}/${REGION_CAP}</div>`;
+      // Click to harvest in event
+      if (showHand && game.phase === Ph.EV_HARVEST && game.pickQueue[0] === p.idx) {
+        rd.style.cursor = 'pointer';
+        rd.addEventListener('click', () => { eventPick(p.idx, i); render(); });
+      }
+      regions.appendChild(rd);
+    }
+    root.appendChild(regions);
+
+    // Played cards
+    if (p.played.length) {
+      const played = document.createElement('div');
+      played.className = 'rv-row';
+      for (const cid of p.played) {
+        const c = CARD_BY_ID[cid];
+        const card = document.createElement('div');
+        card.className = 'rv-card';
+        card.innerHTML = `<div class="ttl">${c.name}</div><div class="desc">${c.desc}</div>`;
+        played.appendChild(card);
+      }
+      root.appendChild(played);
+    }
+
+    // Hand (only viewer sees their own cards)
+    if (showHand) {
+      const hand = document.createElement('div');
+      hand.className = 'rv-row';
+      const allowPlay = game.phase === Ph.MAIN && p.idx === game.current;
+      for (let i = 0; i < p.hand.length; i++) {
+        const c = CARD_BY_ID[p.hand[i]];
+        const card = document.createElement('div');
+        card.className = 'rv-handcard' + (allowPlay && canAfford(p, c.cost) ? '' : ' disabled');
+        const costStr = Object.entries(c.cost).map(([r,n]) => n + RES_SHORT[r]).join(' ');
+        card.innerHTML = `<div class="ttl">${c.name}</div><div class="desc">${c.desc}</div><div class="cost">${costStr}</div>`;
+        if (allowPlay && canAfford(p, c.cost)) {
+          card.addEventListener('click', () => { playCard(i); render(); });
+        }
+        hand.appendChild(card);
+      }
+      root.appendChild(hand);
+    }
+  }
+
+  function drawMid() {
+    const root = document.getElementById('rv-mid');
+    root.innerHTML = '';
+    const prod = document.createElement('div');
+    prod.innerHTML = `<div class="rv-die">${game.dice.prod || '–'}</div><div class="rv-event-label">Prod</div>`;
+    prod.className = 'rv-event-block';
+    root.appendChild(prod);
+    const ev = document.createElement('div');
+    ev.className = 'rv-event-block';
+    const evNum = game.dice.event;
+    const evName = evNum ? EVENTS[evNum].name : '–';
+    ev.innerHTML = `<div class="rv-die event">${evNum || '–'}</div><div class="rv-event-label">${evName}</div>`;
+    root.appendChild(ev);
+  }
+
+  function drawActions() {
+    const root = document.getElementById('rv-actions');
+    root.innerHTML = '';
+    const p = cur();
+    const addBtn = (label, opts={}) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'action-btn' + (opts.cls ? ' ' + opts.cls : '');
+      b.innerHTML = label;
+      if (opts.disabled) b.disabled = true;
+      if (opts.onClick && !opts.disabled) b.addEventListener('click', opts.onClick);
+      root.appendChild(b);
+      return b;
+    };
+
+    if (game.phase === Ph.GAME_OVER) {
+      addBtn('New Game', { cls:'wide primary', onClick: () => { newGame(); render(); } });
+      addBtn('Back to Game Select', { cls:'wide', onClick: () => Shell.showSelect() });
+      return;
+    }
+    if (game.phase === Ph.ROLL) {
+      addBtn('🎲 Roll Dice', { cls:'wide primary', onClick: () => { rollDice(); render(); } });
+      return;
+    }
+    if (game.phase === Ph.EV_HARVEST) {
+      addBtn(`Harvest: ${viewer().name}, tap a region above`, { cls:'wide', disabled:true });
+      return;
+    }
+    if (game.phase === Ph.EV_PLENTY) {
+      // Render 6 resource buttons
+      for (const r of RES) {
+        addBtn(`+1 ${RES_SHORT[r]}`, { onClick: () => { eventPick(viewer().idx, r); render(); } });
+      }
+      return;
+    }
+    if (game.phase === Ph.EV_TOURN) {
+      for (const r of RES) {
+        addBtn(`+1 ${RES_SHORT[r]}`, { onClick: () => { eventPick(viewer().idx, r); render(); } });
+      }
+      return;
+    }
+    // MAIN phase
+    const rd = canAfford(p, COSTS.road) && p.roads < MAX_ROADS;
+    const st = canAfford(p, COSTS.settlement) && p.settlements + p.cities < MAX_SETTLEMENTS && p.roads >= p.settlements + p.cities;
+    const ct = canAfford(p, COSTS.city) && p.cities < MAX_CITIES && p.settlements > 0;
+    addBtn(`Road<span class="cost">1Wd 1Br</span>`, { disabled: !rd, onClick: () => { buildRoad(); render(); } });
+    addBtn(`Settle<span class="cost">1Wd 1Br 1Sh 1Wh</span>`, { disabled: !st, onClick: () => { buildSettlement(); render(); } });
+    addBtn(`City<span class="cost">3Or 2Wh</span>`, { disabled: !ct, onClick: () => { buildCity(); render(); } });
+    addBtn('Trade Bank', { onClick: () => openTrade() });
+    addBtn('End Turn', { cls:'primary', onClick: () => { endTurn(); render(); } });
+  }
+
+  function drawModals() {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = '';
+    if (game.passingTo !== null) {
+      const cover = document.createElement('div');
+      cover.className = 'pass-cover';
+      const np = game.players[game.passingTo];
+      cover.innerHTML = `
+        <div class="who" style="color:${np.color}">${np.name}</div>
+        <div class="tap">Hand the phone to ${np.name}</div>
+        <button class="modal-btn primary">Tap to continue</button>`;
+      cover.addEventListener('click', () => { game.passingTo = null; render(); });
+      root.appendChild(cover);
+      return;
+    }
+    if (game.phase === Ph.GAME_OVER) {
+      const w = game.players[game.winner];
+      const bg = document.createElement('div');
+      bg.className = 'modal-bg';
+      bg.innerHTML = `
+        <div class="modal center">
+          <h2>${w.name} wins!</h2>
+          <p>${vpOf(w)} VP</p>
+          <div class="modal-actions">
+            <button class="modal-btn primary" id="ng">New Duel</button>
+            <button class="modal-btn" id="bk">Game Select</button>
+          </div>
+        </div>`;
+      bg.querySelector('#ng').addEventListener('click', () => { newGame(); render(); });
+      bg.querySelector('#bk').addEventListener('click', () => Shell.showSelect());
+      root.appendChild(bg);
+    }
+  }
+
+  function openTrade() {
+    const root = document.getElementById('modal-root');
+    const p = cur();
+    let give = null, recv = null;
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg';
+    const m = document.createElement('div');
+    m.className = 'modal';
+    m.innerHTML = `
+      <h2>Bank Trade</h2>
+      <p class="small">Default 4:1. Marketplace: 3:1. Merchant or active Trade event: 2:1.</p>
+      <div><b>Give:</b></div>
+      <div class="modal-row" id="give"></div>
+      <div><b>Receive:</b></div>
+      <div class="modal-row" id="recv"></div>
+      <div class="modal-actions">
+        <button class="modal-btn" id="cx">Cancel</button>
+        <button class="modal-btn primary" id="ok" disabled>Confirm</button>
+      </div>`;
+    bg.appendChild(m); root.appendChild(bg);
+    const giveRow = m.querySelector('#give');
+    const recvRow = m.querySelector('#recv');
+    for (const r of RES) {
+      const ratio = bestRatio(p, r);
+      const g = document.createElement('div');
+      g.className = 'pick'; g.style.background = RES_COLOR[r];
+      g.innerHTML = `<div>${r.toUpperCase()}</div><div class="sub">${ratio}:1 (${p.resources[r]})</div>`;
+      g.dataset.r = r;
+      g.addEventListener('click', () => { give = r; refresh(); });
+      giveRow.appendChild(g);
+      const re = document.createElement('div');
+      re.className = 'pick'; re.style.background = RES_COLOR[r];
+      re.innerHTML = `<div>${r.toUpperCase()}</div>`;
+      re.dataset.r = r;
+      re.addEventListener('click', () => { recv = r; refresh(); });
+      recvRow.appendChild(re);
+    }
+    function refresh() {
+      for (const el of giveRow.children) el.classList.toggle('selected', el.dataset.r === give);
+      for (const el of recvRow.children) el.classList.toggle('selected', el.dataset.r === recv);
+      const ok = give && recv && give !== recv && p.resources[give] >= bestRatio(p, give);
+      m.querySelector('#ok').disabled = !ok;
+    }
+    m.querySelector('#cx').addEventListener('click', () => bg.remove());
+    m.querySelector('#ok').addEventListener('click', () => { bankTrade(give, recv); bg.remove(); render(); });
+  }
+
+  function openMenu() {
+    const root = document.getElementById('modal-root');
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg';
+    bg.innerHTML = `
+      <div class="modal">
+        <h2>Menu</h2>
+        <div class="modal-actions" style="flex-wrap:wrap;justify-content:center;gap:6px;">
+          <button class="modal-btn" id="hp">How to Play</button>
+          <button class="modal-btn" id="ng">New Duel</button>
+          <button class="modal-btn" id="lg">Log</button>
+          <button class="modal-btn" id="back">Game Select</button>
+          <button class="modal-btn" id="cx">Close</button>
+        </div>
+      </div>`;
+    bg.addEventListener('click', e => { if (e.target === bg) bg.remove(); });
+    bg.querySelector('#cx').addEventListener('click', () => bg.remove());
+    bg.querySelector('#hp').addEventListener('click', () => { bg.remove(); openHelp(); });
+    bg.querySelector('#ng').addEventListener('click', () => { bg.remove(); newGame(); render(); });
+    bg.querySelector('#lg').addEventListener('click', () => { bg.remove(); openLog(); });
+    bg.querySelector('#back').addEventListener('click', () => { bg.remove(); Shell.showSelect(); });
+    root.appendChild(bg);
+  }
+
+  function openLog() {
+    const root = document.getElementById('modal-root');
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg';
+    bg.innerHTML = `
+      <div class="modal">
+        <h2>Game Log</h2>
+        <div style="max-height: 50vh; overflow:auto; font-size: 12px; line-height:1.4; color:#cdd;">
+          ${game.log.map(l => '<div>' + Shell.escapeHtml(l) + '</div>').join('')}
+        </div>
+        <div class="modal-actions"><button class="modal-btn" id="cx">Close</button></div>
+      </div>`;
+    bg.querySelector('#cx').addEventListener('click', () => bg.remove());
+    root.appendChild(bg);
+  }
+
+  function openHelp() {
+    const root = document.getElementById('modal-root');
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg';
+    const swatch = (color, label) =>
+      `<span style="display:inline-block;width:12px;height:12px;background:${color};border:1px solid #000;border-radius:2px;vertical-align:middle;margin-right:4px"></span>${label}`;
+    bg.innerHTML = `
+      <div class="modal" style="max-width:460px;max-height:88vh;overflow:auto;">
+        <h2>Catan Duel — How to Play</h2>
+        <p class="small">2-player card duel. First to <b>${WIN_VP} VP</b> wins.</p>
+
+        <h3 style="margin:8px 0 4px 0;font-size:15px;">Setup</h3>
+        <p style="font-size:13px;line-height:1.4;color:#cdd;margin:0 0 8px 0;">
+          Each player starts with <b>2 settlements</b>, <b>1 road</b>, 1 of each resource (one per region),
+          and a <b>3-card hand</b> drawn from the expansion deck.
+          Each player has 6 regions (one per resource type), each given a unique die number 1–6.
+        </p>
+
+        <h3 style="margin:8px 0 4px 0;font-size:15px;">Each Turn</h3>
+        <ol style="font-size:13px;line-height:1.4;color:#cdd;margin:0 0 8px 18px;padding:0;">
+          <li><b>Roll 2 dice</b>: a production die (d6) and an event die (d6).</li>
+          <li><b>Production</b>: any region (yours or opponent's) whose number matches the production die produces 1 of its resource. Region capacity is 3; excess is lost.</li>
+          <li><b>Event</b>: apply the event effect (see below).</li>
+          <li><b>Build / play cards / trade</b> as long as resources allow.</li>
+          <li><b>End turn</b>: hand auto-discards down to ${HAND_LIMIT} and refills back up from the deck.</li>
+        </ol>
+
+        <h3 style="margin:8px 0 4px 0;font-size:15px;">Resources & Regions</h3>
+        <div style="font-size:12px;line-height:1.7;color:#dde;margin-bottom:6px;">
+          ${swatch(RES_COLOR.wood,'Wood (Wd) — Forest')} &nbsp; ${swatch(RES_COLOR.brick,'Brick (Br) — Hills')}<br>
+          ${swatch(RES_COLOR.sheep,'Sheep (Sh) — Pasture')} &nbsp; ${swatch(RES_COLOR.wheat,'Wheat (Wh) — Fields')}<br>
+          ${swatch(RES_COLOR.ore,'Ore (Or) — Mountains')} &nbsp; ${swatch(RES_COLOR.gold,'Gold (Go) — Gold Field')}
+        </div>
+
+        <h3 style="margin:8px 0 4px 0;font-size:15px;">Build Costs</h3>
+        <div style="font-size:13px;line-height:1.5;color:#cdd;">
+          <b>Road</b>: 1 Wd + 1 Br &nbsp;(needed to extend before placing the next settlement)<br>
+          <b>Settlement</b> (+1 VP): 1 Wd + 1 Br + 1 Sh + 1 Wh<br>
+          <b>City</b> (+1 VP, replaces a settlement → total +2 VP): 3 Or + 2 Wh<br>
+          <b>Play card from hand</b>: pay its listed cost
+        </div>
+
+        <h3 style="margin:8px 0 4px 0;font-size:15px;">Events</h3>
+        <div style="font-size:13px;line-height:1.5;color:#cdd;">
+          <b>1 Brigand</b>: anyone with 8+ resources is robbed down to 7. Fortress immune.<br>
+          <b>2 Trade</b>: bank ratios are 2:1 for both players this turn.<br>
+          <b>3 Harvest</b>: each player picks one region; it produces 1 resource.<br>
+          <b>4 Plenty</b>: each player picks 1 resource from the bank.<br>
+          <b>5 Tournament</b>: most knights gains 1 of any resource (tie: both).<br>
+          <b>6 Festival</b>: any player with 4+ VP gains 1 gold.
+        </div>
+
+        <h3 style="margin:8px 0 4px 0;font-size:15px;">Cards</h3>
+        <div style="font-size:12px;line-height:1.5;color:#cdd;">
+          ${CARDS.map(c => '<b>'+c.name+'</b> ('+Object.entries(c.cost).map(([r,n])=>n+RES_SHORT[r]).join('+')+'): '+c.desc).join('<br>')}
+        </div>
+
+        <h3 style="margin:8px 0 4px 0;font-size:15px;">UI Cheat-Sheet</h3>
+        <div style="font-size:12px;line-height:1.5;color:#cdd;">
+          <b>S</b> = Settlements &nbsp; <b>C</b> = Cities &nbsp; <b>R</b> = Roads<br>
+          <b>K</b> = Knight cards played<br>
+          <b>VP</b> = total Victory Points<br>
+          <b>★F</b> = has Fortress &nbsp; <b>★M</b> = has Marketplace &nbsp; <b>★Mc</b> = has Merchant<br>
+          Yellow border on a region = current production die matches it.<br>
+          Resource bar: opponent's counts show as "?" — only the active viewer sees their own.
+        </div>
+
+        <div class="modal-actions"><button class="modal-btn primary" id="cx">Got it</button></div>
+      </div>`;
+    bg.querySelector('#cx').addEventListener('click', () => bg.remove());
+    bg.addEventListener('click', e => { if (e.target === bg) bg.remove(); });
+    root.appendChild(bg);
+  }
+
+  return {
+    start,
+    // expose for simulation/testing
+    _internals: () => ({
+      game, rollDice, endTurn, buildRoad, buildSettlement, buildCity,
+      playCard, eventPick, bankTrade, vpOf, totalRes, canAfford,
+      COSTS, RES, CARDS, Ph, viewer, cur,
+    }),
+  };
+})();
+
+// ============================================================
+// BOOT (game-select wiring + service worker)
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('#game-select-screen [data-game]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const g = btn.dataset.game;
+      if (g === 'catan') Catan.start(3);
+      else if (g === 'rivals') Rivals.start();
+    });
+  });
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+});
 </script>
 </body>
 </html>
