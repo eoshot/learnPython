@@ -223,15 +223,17 @@ const WIN_VP = 10;
 const HEX_DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
 
 const PORT_PLACEMENTS = [
-  [[0,-2],  2, '3:1'],
-  [[2,-2],  1, 'wheat'],
-  [[2,-1],  0, 'ore'],
-  [[2, 0],  0, '3:1'],
-  [[1, 1],  5, 'sheep'],
-  [[-1, 2], 5, '3:1'],
-  [[-2, 2], 4, 'brick'],
-  [[-2, 1], 3, 'wood'],
-  [[-2, 0], 3, '3:1'],
+  // Spaced around the 30 coast edges with 2-3 sea-edge gaps so no two
+  // ports share a corner. 4 generic 3:1 + one 2:1 per resource.
+  [[0, -2],  5, '3:1'],
+  [[1, -2],  0, 'ore'],
+  [[2, -2],  1, '3:1'],
+  [[2,  0],  0, 'wheat'],
+  [[1,  1],  1, '3:1'],
+  [[0,  2],  2, 'brick'],
+  [[-1, 2],  3, 'sheep'],
+  [[-2, 1],  3, 'wood'],
+  [[-2, 0],  5, '3:1'],
 ];
 
 // Phase constants
@@ -648,7 +650,8 @@ class Game {
     if (this.discard_needed.size) {
       this.phase = Ph.DISCARD;
       const first = this.discard_needed.keys().next().value;
-      this.message = `${this.players[first].name} must discard ${this.discard_needed.get(first)}.`;
+      this.message = `${this.players[first].name}: discard ${this.discard_needed.get(first)} card(s).`;
+      if (first !== this.current) this.passingTo = first;
     } else {
       this.phase = Ph.MOVE_ROBBER;
       this.message = `${this.cur().name}: move the robber.`;
@@ -665,11 +668,22 @@ class Game {
     if (this.discard_needed.size === 0) {
       this.phase = Ph.MOVE_ROBBER;
       this.message = `${this.cur().name}: move the robber.`;
+      if (pidx !== this.current) this.passingTo = this.current;
     } else {
       const next = this.discard_needed.keys().next().value;
-      this.message = `${this.players[next].name} must discard ${this.discard_needed.get(next)}.`;
+      this.message = `${this.players[next].name}: discard ${this.discard_needed.get(next)} card(s).`;
+      if (next !== pidx) this.passingTo = next;
     }
   }
+  // Whose hand should the UI show right now? Default is the current player,
+  // but during DISCARD it should be whoever owes cards.
+  viewerIdx() {
+    if (this.phase === Ph.DISCARD && this.discard_needed && this.discard_needed.size) {
+      return this.discard_needed.keys().next().value;
+    }
+    return this.current;
+  }
+  viewer() { return this.players[this.viewerIdx()]; }
   moveRobber(coord) {
     if (coord === this.board.robber || !this.board.hexes.has(coord)) return;
     this.board.robber = coord;
@@ -1157,6 +1171,136 @@ function drawBoard() {
   }
 }
 
+// Tiny seeded pseudo-random for stable per-tile decoration positions.
+function tileRand(seed) {
+  let s = seed | 0;
+  return () => {
+    s = (s * 1103515245 + 12345) | 0;
+    return ((s >>> 16) & 0x7fff) / 0x7fff;
+  };
+}
+
+function drawTerrainDecor(h) {
+  const cx = h.cx, cy = h.cy, S = HEX_SIZE;
+  // Stable seed per hex coord so decorations don't dance on resize.
+  const r = tileRand(h.coord[0] * 1000 + h.coord[1] * 17 + 9999);
+  switch (h.terrain) {
+    case 'forest': {
+      // Triangle "trees" with darker trunk-toned trunks.
+      ctx.fillStyle = '#0e3a14';
+      const trees = 9;
+      for (let i = 0; i < trees; i++) {
+        const tx = cx + (r() - 0.5) * S * 1.3;
+        const ty = cy + (r() - 0.5) * S * 1.1;
+        const sz = S * (0.16 + r() * 0.08);
+        ctx.beginPath();
+        ctx.moveTo(tx, ty - sz);
+        ctx.lineTo(tx + sz * 0.55, ty + sz * 0.5);
+        ctx.lineTo(tx - sz * 0.55, ty + sz * 0.5);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = '#5a3618';
+      for (let i = 0; i < 4; i++) {
+        const tx = cx + (r() - 0.5) * S * 1.1;
+        const ty = cy + (r() - 0.5) * S * 0.9;
+        ctx.fillRect(tx - 1.5, ty + S * 0.05, 3, S * 0.1);
+      }
+      break;
+    }
+    case 'hills': {
+      // Stacked "bricks" — staggered rectangles.
+      ctx.strokeStyle = '#5e2f17';
+      ctx.lineWidth = 1;
+      ctx.fillStyle = '#c47045';
+      const rows = 4, cols = 4;
+      const bw = S * 0.34, bh = S * 0.18;
+      for (let row = 0; row < rows; row++) {
+        const offset = (row % 2) * bw / 2;
+        for (let col = -1; col < cols; col++) {
+          const bx = cx - bw * 1.5 + col * bw + offset;
+          const by = cy - bh * 2 + row * bh + bh * 0.1;
+          ctx.fillRect(bx, by, bw - 2, bh - 2);
+          ctx.strokeRect(bx, by, bw - 2, bh - 2);
+        }
+      }
+      break;
+    }
+    case 'pasture': {
+      // White wool puffs.
+      for (let i = 0; i < 7; i++) {
+        const px = cx + (r() - 0.5) * S * 1.2;
+        const py = cy + (r() - 0.5) * S * 1.0;
+        const rad = S * (0.09 + r() * 0.05);
+        ctx.fillStyle = '#fafafa';
+        ctx.beginPath(); ctx.arc(px, py, rad, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#222';
+        ctx.beginPath(); ctx.arc(px - rad * 0.7, py + rad * 0.1, rad * 0.35, 0, Math.PI * 2); ctx.fill();
+      }
+      break;
+    }
+    case 'fields': {
+      // Vertical wheat rows with stalks.
+      ctx.strokeStyle = '#8a6a18';
+      ctx.lineWidth = 1.2;
+      const stripes = 7;
+      for (let i = 0; i < stripes; i++) {
+        const x = cx - S * 0.7 + i * (S * 1.4) / (stripes - 1);
+        ctx.beginPath();
+        ctx.moveTo(x, cy - S * 0.55);
+        ctx.lineTo(x, cy + S * 0.55);
+        ctx.stroke();
+        // small heads
+        ctx.fillStyle = '#c4a02a';
+        for (let k = 0; k < 4; k++) {
+          ctx.beginPath();
+          ctx.arc(x, cy - S * 0.45 + k * S * 0.28, 1.5, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      break;
+    }
+    case 'mountains': {
+      // Triangular peaks with snow caps.
+      const peaks = [
+        [cx - S * 0.55, cy + S * 0.45, S * 0.6],
+        [cx,            cy + S * 0.5,  S * 0.75],
+        [cx + S * 0.55, cy + S * 0.45, S * 0.55],
+      ];
+      for (const [px, py, ph] of peaks) {
+        ctx.fillStyle = '#5e5e5e';
+        ctx.beginPath();
+        ctx.moveTo(px, py - ph);
+        ctx.lineTo(px + ph * 0.7, py);
+        ctx.lineTo(px - ph * 0.7, py);
+        ctx.closePath(); ctx.fill();
+        // snow cap
+        ctx.fillStyle = '#f0f0f0';
+        ctx.beginPath();
+        ctx.moveTo(px, py - ph);
+        ctx.lineTo(px + ph * 0.22, py - ph * 0.65);
+        ctx.lineTo(px - ph * 0.22, py - ph * 0.65);
+        ctx.closePath(); ctx.fill();
+      }
+      break;
+    }
+    case 'desert': {
+      // Sandy dots + a small cactus.
+      ctx.fillStyle = '#c4a76a';
+      for (let i = 0; i < 18; i++) {
+        const dx = cx + (r() - 0.5) * S * 1.4;
+        const dy = cy + (r() - 0.5) * S * 1.2;
+        ctx.beginPath(); ctx.arc(dx, dy, 1.5, 0, Math.PI * 2); ctx.fill();
+      }
+      // cactus
+      ctx.fillStyle = '#3e7b3a';
+      const cxC = cx - S * 0.45, cyC = cy + S * 0.1;
+      ctx.fillRect(cxC - 3, cyC - S * 0.25, 6, S * 0.5);
+      ctx.fillRect(cxC - S * 0.16, cyC - S * 0.05, 5, S * 0.18);
+      ctx.fillRect(cxC + S * 0.1, cyC - S * 0.12, 5, S * 0.22);
+      break;
+    }
+  }
+}
+
 function drawHex(h) {
   ctx.fillStyle = TERRAIN_COLORS[h.terrain];
   ctx.beginPath();
@@ -1164,6 +1308,11 @@ function drawHex(h) {
   for (let i = 1; i < 6; i++) ctx.lineTo(h.corners[i][0], h.corners[i][1]);
   ctx.closePath();
   ctx.fill();
+  // Decorative texture for this terrain (clipped to the hex shape)
+  ctx.save();
+  ctx.clip();
+  drawTerrainDecor(h);
+  ctx.restore();
   ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1.5; ctx.stroke();
   if (h.number !== null) {
     ctx.fillStyle = '#f5ebc8';
@@ -1270,7 +1419,9 @@ function currentHighlights() {
 
 function drawStatus() {
   const g = game;
-  const p = g.cur();
+  // Show the player whose turn-to-act it is. During DISCARD that's the
+  // discarder, not the player who rolled.
+  const p = g.viewer();
   const tag = document.getElementById('player-tag');
   tag.textContent = p.name;
   tag.style.background = p.color;
@@ -1319,7 +1470,8 @@ function onPlayerCardClick(idx) {
 function drawHand() {
   const bar = document.getElementById('hand-bar');
   bar.innerHTML = '';
-  const p = game.cur();
+  // Show the viewer's hand (the discarder during DISCARD, otherwise current).
+  const p = game.viewer();
 
   // resources
   let any = false;
@@ -1366,10 +1518,7 @@ function drawHand() {
 
 function onResCardClick(r) {
   if (game.phase === Ph.DISCARD) {
-    const pidx = game.discard_needed.keys().next().value;
-    if (pidx !== undefined && game.players[pidx].idx === game.cur().idx) {
-      // current player only — but discard is for whoever is "front"
-    }
+    const pidx = game.viewerIdx();
     game.discardCard(pidx, r); render();
   } else if (game.phase === Ph.YEAR_OF_PLENTY) {
     game.yopPick(r); render();
@@ -1561,6 +1710,7 @@ function openMenu() {
     <div class="modal">
       <h2>Menu</h2>
       <div class="modal-actions" style="flex-wrap:wrap;justify-content:center;gap:6px;">
+        <button class="modal-btn" id="hp">How to Play</button>
         <button class="modal-btn" id="ng3">New 3p Game</button>
         <button class="modal-btn" id="ng4">New 4p Game</button>
         <button class="modal-btn" id="lg">Log</button>
@@ -1569,9 +1719,97 @@ function openMenu() {
     </div>`;
   bg.addEventListener('click', (e) => { if (e.target === bg) bg.remove(); });
   bg.querySelector('#cx').addEventListener('click', () => bg.remove());
+  bg.querySelector('#hp').addEventListener('click', () => { bg.remove(); openHelp(); });
   bg.querySelector('#ng3').addEventListener('click', () => { bg.remove(); newGame(3); });
   bg.querySelector('#ng4').addEventListener('click', () => { bg.remove(); newGame(4); });
   bg.querySelector('#lg').addEventListener('click', () => { bg.remove(); openLog(); });
+  root.appendChild(bg);
+}
+
+function openHelp() {
+  const root = document.getElementById('modal-root');
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  const swatch = (color, label) =>
+    `<span style="display:inline-block;width:12px;height:12px;background:${color};border:1px solid #000;border-radius:2px;vertical-align:middle;margin-right:4px"></span>${label}`;
+  bg.innerHTML = `
+    <div class="modal" style="max-width:460px;max-height:88vh;overflow:auto;">
+      <h2>How to Play</h2>
+      <p class="small">First to <b>10 victory points</b> wins.</p>
+
+      <h3 style="margin:8px 0 4px 0;font-size:15px;">Setup</h3>
+      <p style="font-size:13px;line-height:1.4;color:#cdd;margin:0 0 8px 0;">
+        Each player places <b>2 settlements</b> + <b>2 roads</b> in snake order.
+        Your <i>second</i> settlement gives you 1 of each adjacent terrain's resource.
+      </p>
+
+      <h3 style="margin:8px 0 4px 0;font-size:15px;">Tiles → Resources</h3>
+      <div style="font-size:12px;line-height:1.7;color:#dde;margin-bottom:6px;">
+        ${swatch('#226b22','Forest → Wood')} &nbsp; ${swatch('#a55a2e','Hills → Brick')}<br>
+        ${swatch('#8acf52','Pasture → Sheep')} &nbsp; ${swatch('#f0c844','Fields → Wheat')}<br>
+        ${swatch('#7c7c7c','Mountains → Ore')} &nbsp; ${swatch('#e6d29a','Desert → nothing')}
+      </div>
+
+      <h3 style="margin:8px 0 4px 0;font-size:15px;">Each Turn</h3>
+      <ol style="font-size:13px;line-height:1.4;color:#cdd;margin:0 0 8px 18px;padding:0;">
+        <li>Roll dice. Every settlement/city on a tile with that number produces (city = 2x).</li>
+        <li>Build, trade, or play a dev card.</li>
+        <li>End turn.</li>
+      </ol>
+
+      <h3 style="margin:8px 0 4px 0;font-size:15px;">Build Costs</h3>
+      <div style="font-size:13px;line-height:1.5;color:#cdd;">
+        <b>Road</b>: 1 Wood + 1 Brick<br>
+        <b>Settlement</b> (1 VP): 1 Wood + 1 Brick + 1 Sheep + 1 Wheat — must touch your road, not adjacent to any other building<br>
+        <b>City</b> (2 VP, replaces a settlement): 3 Ore + 2 Wheat<br>
+        <b>Dev Card</b>: 1 Ore + 1 Wheat + 1 Sheep
+      </div>
+
+      <h3 style="margin:8px 0 4px 0;font-size:15px;">Dev Cards</h3>
+      <div style="font-size:13px;line-height:1.5;color:#cdd;">
+        <b>Knight</b>: move robber + steal. 3+ played = <b>Largest Army</b> (+2 VP).<br>
+        <b>Road Building</b>: place 2 free roads.<br>
+        <b>Year of Plenty</b>: take any 2 resources from the bank.<br>
+        <b>Monopoly</b>: name a resource; all opponents give you all of theirs.<br>
+        <b>Victory Point</b>: silent +1 VP. Newly bought cards can't be played the same turn.
+      </div>
+
+      <h3 style="margin:8px 0 4px 0;font-size:15px;">Robber & 7</h3>
+      <p style="font-size:13px;line-height:1.4;color:#cdd;margin:0 0 8px 0;">
+        Roll 7: any player with <b>more than 7</b> cards discards half (rounded down).
+        The roller moves the robber to any tile (blocks production there) and steals
+        a random card from a player on that tile.
+      </p>
+
+      <h3 style="margin:8px 0 4px 0;font-size:15px;">Ports & Trading</h3>
+      <p style="font-size:13px;line-height:1.4;color:#cdd;margin:0 0 8px 0;">
+        Default bank trade is <b>4:1</b>. A settlement on a generic port is <b>3:1</b>;
+        on a resource-specific port it's <b>2:1</b> for that resource.
+      </p>
+
+      <h3 style="margin:8px 0 4px 0;font-size:15px;">Longest Road</h3>
+      <p style="font-size:13px;line-height:1.4;color:#cdd;margin:0 0 8px 0;">
+        Hold a chain of <b>5+</b> connected roads to claim <b>+2 VP</b>. Opponents
+        building a settlement on your road breaks it.
+      </p>
+
+      <h3 style="margin:8px 0 4px 0;font-size:15px;">UI Cheat-Sheet</h3>
+      <div style="font-size:12px;line-height:1.5;color:#cdd;">
+        <b>C</b> = total resource <b>C</b>ards in hand<br>
+        <b>D</b> = <b>D</b>ev cards in hand<br>
+        <b>K</b> = <b>K</b>nights played<br>
+        <b>LR</b> = <b>L</b>ongest <b>R</b>oad chain length<br>
+        <b>★LA</b> = holds Largest Army (+2 VP)<br>
+        <b>★LR</b> = holds Longest Road (+2 VP)<br>
+        Yellow circle = a valid spot to tap. Right side of board = ports.<br>
+        Number tokens on tiles: pips below the number = probability dots
+        (5 dots = most likely, 1 = least). Red <b>6</b> & <b>8</b> = highest yield.
+      </div>
+
+      <div class="modal-actions"><button class="modal-btn primary" id="cx">Got it</button></div>
+    </div>`;
+  bg.querySelector('#cx').addEventListener('click', () => bg.remove());
+  bg.addEventListener('click', (e) => { if (e.target === bg) bg.remove(); });
   root.appendChild(bg);
 }
 
