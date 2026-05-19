@@ -1,3 +1,14 @@
 __pycache__/
 *.pyc
 *.pyo
+
+# Tesla tracker — never commit secrets or scraped data
+.env
+*.token
+snapshots/
+history.db
+tracker.log
+
+# Vendored base/ script's runtime artifacts (tokens = full account access)
+base/tesla_tokens.json
+base/tesla_orders.json
